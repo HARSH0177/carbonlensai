@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ──────────── DESIGN TOKENS ──────────── */
+:root {
+  /* Organic Biophilic Palette */
+  --background: #ecfeff;
+  --foreground: #164e63;
+  
+  --primary: #0891b2;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #22d3ee;
+  --secondary-foreground: #164e63;
+  
+  --accent: #22c55e;
+  --accent-foreground: #ffffff;
+
+  --muted: #cbd5e1;
+  --muted-foreground: #64748b;
+
+  /* Custom App Colors */
+  --forest: #164e63;
+  --leaf: #0891b2;
+  --moss: #22c55e;
+  --sage: #22d3ee;
+  --teal: #0891b2;
+  --earth: #94a3b8;
+  
+  --green-50: #cffafe;
+  --green-100: #a5f3fc;
+  --green-500: #06b6d4;
+  --green-600: #0891b2;
+  --green-700: #0e7490;
+  
+  --radius: 1.5rem; /* 24px for organic rounded corners */
+}
+
+/* ──────────── BASE ──────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Fira Sans', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fira Sans', sans-serif;
+    color: var(--forest);
+    letter-spacing: -0.025em;
+  }
+
+  .font-mono, .data-number {
+    font-family: 'Fira Code', monospace !important;
+  }
+  
+  ::selection {
+    background: var(--sage);
+    color: var(--forest);
+  }
+}
+
+/* ──────────── SCROLLBAR ──────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--leaf); }
+
+/* ──────────── GLASS EFFECT ──────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.glass-navbar {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* ──────────── KEYFRAMES ──────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { transform: translate(0%, 0%) scale(1); }
+  33% { transform: translate(5%, -5%) scale(1.05); }
+  66% { transform: translate(-3%, 3%) scale(0.95); }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ──────────── RANGE SLIDER ──────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, var(--sage), #D1FAE5);
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--leaf);
+  border: 3px solid white;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.5);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: var(--leaf);
+  border: 3px solid white;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.4);
+}
