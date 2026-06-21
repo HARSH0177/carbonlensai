@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 
 export default function Card({ children, className = '', variant = 'default', hover = false, onClick }) {
@@ -35,3 +36,11 @@ export default function Card({ children, className = '', variant = 'default', ho
     </div>
   );
 }
+
+Card.propTypes = {
+  children: PropTypes.node.isRequired,
+  className: PropTypes.string,
+  variant: PropTypes.oneOf(['default', 'glass', 'gradient']),
+  hover: PropTypes.bool,
+  onClick: PropTypes.func,
+};

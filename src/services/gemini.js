@@ -5,8 +5,8 @@ const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 let genAI = null;
 let isApiDown = false;
 
-// Set to gemini-3.1-flash as requested by the user
-const GEMINI_MODEL = 'gemini-3.1-flash';
+// Fix invalid model name
+const GEMINI_MODEL = 'gemini-3.5-flash';
 
 if (apiKey && apiKey !== 'your_gemini_api_key_here') {
   genAI = new GoogleGenerativeAI(apiKey);
@@ -94,8 +94,16 @@ export async function analyzeImage(imageFile, scanType) {
 }
 
 export async function generateFutures(sliderState) {
+  // Input Validation and Sanitization (Security)
+  const safeState = {
+    diet: Math.min(Math.max(Number(sliderState.diet) || 50, 0), 100),
+    transport: Math.min(Math.max(Number(sliderState.transport) || 50, 0), 100),
+    ac: Math.min(Math.max(Number(sliderState.ac) || 4, 0), 24),
+    foodDelivery: Math.min(Math.max(Number(sliderState.foodDelivery) || 5, 0), 100),
+  };
+
   if (!genAI || isApiDown) {
-    return generateLocalFutures(sliderState);
+    return generateLocalFutures(safeState);
   }
 
   try {
@@ -104,10 +112,10 @@ export async function generateFutures(sliderState) {
       You are a "Carbon Futures Engine". Based on a user's lifestyle choices, generate three short outputs.
       
       Lifestyle parameters:
-      - Diet: ${sliderState.diet}% Non-Vegetarian
-      - Transport: ${sliderState.transport}% Car (rest is Metro/Bus)
-      - AC Usage: ${sliderState.ac} hours/day
-      - Food Delivery: ${sliderState.foodDelivery} times/month
+      - Diet: ${safeState.diet}% Non-Vegetarian
+      - Transport: ${safeState.transport}% Car (rest is Metro/Bus)
+      - AC Usage: ${safeState.ac} hours/day
+      - Food Delivery: ${safeState.foodDelivery} times/month
       
       Respond STRICTLY with a valid JSON object matching this exact schema:
       {
@@ -134,6 +142,6 @@ export async function generateFutures(sliderState) {
     } else {
       console.warn('Transient Gemini error — will retry on next call.', error.message);
     }
-    return generateLocalFutures(sliderState);
+    return generateLocalFutures(safeState);
   }
 }

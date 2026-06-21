@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import { Sliders, Leaf, Wind, RefreshCw, Loader2, TreePine } from 'lucide-react';
 import { generateFutures } from '../services/gemini';
@@ -89,13 +90,13 @@ export default function SimulatorPage() {
   ];
 
   return (
-    <PageWrapper className="max-w-6xl mx-auto px-4 py-8">
-      <div className="text-center mb-12">
+    <main className="max-w-6xl mx-auto px-4 py-8">
+      <header className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4" style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--forest)' }}>What-If Simulator</h1>
         <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--muted)' }}>Adjust your daily habits. Watch how small changes multiply over time.</p>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8" aria-label="Simulator Controls and Results">
         <div className="lg:col-span-5">
           <Card variant="glass" className="sticky top-24">
             <div className="flex items-center gap-2 mb-6">
@@ -109,8 +110,8 @@ export default function SimulatorPage() {
                     <span style={{ color: 'var(--forest)' }}>{s.label}</span>
                     <span style={{ color: 'var(--muted)' }}>{s.display}</span>
                   </div>
-                  <input type="range" min={s.min} max={s.max} step={s.step || 1} value={sliderState[s.key]} onChange={(e) => handleSlider(e, s.key)} className="w-full" />
-                  <div className="flex justify-between text-xs mt-2 font-medium" style={{ color: 'var(--muted)' }}>
+                  <input type="range" min={s.min} max={s.max} step={s.step || 1} value={sliderState[s.key]} onChange={(e) => handleSlider(e, s.key)} className="w-full" aria-label={`Adjust ${s.label}`} aria-valuemin={s.min} aria-valuemax={s.max} aria-valuenow={sliderState[s.key]} />
+                  <div className="flex justify-between text-xs mt-2 font-medium" style={{ color: 'var(--muted)' }} aria-hidden="true">
                     <span>{s.left}</span><span>{s.right}</span>
                   </div>
                 </div>
@@ -122,8 +123,8 @@ export default function SimulatorPage() {
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>Add {totalCO2.toFixed(1)} kg from your uploaded scans to the simulation.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" checked={includeScans} onChange={() => setIncludeScans(!includeScans)} />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--leaf)]"></div>
+                  <input type="checkbox" className="sr-only peer" checked={includeScans} onChange={() => setIncludeScans(!includeScans)} aria-label="Include Scan History in calculation" />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--leaf)]" aria-hidden="true"></div>
                 </label>
               </div>
             </div>
@@ -180,7 +181,7 @@ export default function SimulatorPage() {
                     // loading overlay gets permanently stuck.
                     key={imageSrc}
                     src={imageSrc} 
-                    alt="Future City" 
+                    alt={futures?.imagePrompt ? `AI generated visualization of: ${futures.imagePrompt}` : "Future city visualization based on your carbon footprint"} 
                     className={`w-full h-full object-cover bg-gray-200 transition-all duration-700 ${isGenerating || isImageLoading ? 'blur-md scale-105' : 'blur-0 scale-100'}`}
                     onLoad={() => setIsImageLoading(false)}
                     onError={(e) => {
@@ -242,7 +243,9 @@ export default function SimulatorPage() {
             </div>
           </Card>
         </div>
-      </div>
-    </PageWrapper>
+      </section>
+    </main>
   );
 }
+
+SimulatorPage.propTypes = {};

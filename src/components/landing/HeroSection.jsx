@@ -10,9 +10,9 @@ export default function HeroSection() {
   const opacity = useTransform(scrollY, [0, 500], [1, 0]);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pt-16">
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pt-16" aria-labelledby="hero-title">
       {/* Magic UI style Animated Mesh Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-[var(--background)]">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-[var(--background)]" aria-hidden="true">
         <motion.div 
           style={{ y: y1, background: 'var(--teal)' }}
           animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0], opacity: [0.3, 0.4, 0.3] }}
@@ -48,7 +48,7 @@ export default function HeroSection() {
         </motion.div>
 
         {/* Hero Title */}
-        <h1 className="text-6xl md:text-8xl font-bold leading-[1.1] mb-10 tracking-tight" style={{ color: 'var(--forest)' }}>
+        <h1 id="hero-title" className="text-6xl md:text-8xl font-bold leading-[1.1] mb-10 tracking-tight" style={{ color: 'var(--forest)' }}>
           <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="block">
             See your impact.
           </motion.span>
@@ -77,27 +77,29 @@ export default function HeroSection() {
         >
           <Link 
             to="/scan" 
+            aria-label="Scan Now to estimate your carbon footprint"
             className="group relative flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-5 text-white rounded-[24px] font-bold text-lg overflow-hidden transition-all hover:scale-[1.02]" 
             style={{ background: 'linear-gradient(135deg, var(--teal), var(--moss))', boxShadow: '0 20px 40px -10px rgba(34,197,94,0.4)' }}
           >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            <Camera className="w-6 h-6" />
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" aria-hidden="true" />
+            <Camera className="w-6 h-6" aria-hidden="true" />
             <span>Scan Now</span>
           </Link>
           
           <Link 
             to="/auth" 
+            aria-label="Try the Demo"
             className="group flex items-center justify-center gap-3 w-full sm:w-auto px-10 py-5 bg-white rounded-[24px] font-bold text-lg transition-all shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(8,145,178,0.1)] border border-gray-100 hover:border-[var(--teal)]" 
             style={{ color: 'var(--forest)' }}
           >
             <span>Try the Demo</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </Link>
         </motion.div>
       </motion.div>
 
       {/* Decorative Bottom Wave */}
-      <div className="absolute bottom-0 w-full overflow-hidden leading-none pointer-events-none -z-10">
+      <div className="absolute bottom-0 w-full overflow-hidden leading-none pointer-events-none -z-10" aria-hidden="true">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[150px]">
           <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,120.35,187.5,102.5,233.91,87.89,279.71,68.7,321.39,56.44Z" style={{ fill: 'white' }}></path>
         </svg>
