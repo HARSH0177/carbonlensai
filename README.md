@@ -22,6 +22,22 @@
 
 ---
 
+## 📸 Interface & Live Visual Demonstrations
+
+<div align="center">
+
+### 🎛️ What-If Climate Simulator & Dynamic 2050 Futures Engine
+<img src="assets/carbonlens_simulator_ui.jpg" alt="CarbonLensAI What-If Simulator Interface" width="95%" />
+
+<br><br>
+
+### 📜 AI-Generated "Letter From 2050" & City Impact Scaling
+<img src="assets/carbonlens_letter_from_2050.jpg" alt="CarbonLensAI Letter From 2050 and Impact Scale" width="95%" />
+
+</div>
+
+---
+
 ## 📌 Project Overview
 
 **CarbonLensAI** is an interactive, production-ready web platform engineered to gamify personal sustainability and climate awareness. Instead of presenting abstract numbers in dry spreadsheets, CarbonLensAI leverages multimodal Generative AI to provide immediate, visual, and actionable climate feedback:
@@ -66,6 +82,7 @@
 
 ```text
 carbonlensai/
+├── assets/                    # UI screenshots and visual demonstration assets
 ├── src/
 │   ├── components/
 │   │   ├── common/            # Loading skeletons, animated backgrounds, empty states
