@@ -4,6 +4,7 @@ import {
   getGrade,
   getTreeEquivalence,
   getFallbackResult,
+  getCategoryAverage,
   generateLocalFutures
 } from './carbon-engine';
 
@@ -30,10 +31,19 @@ describe('Carbon Engine Services', () => {
     expect(getTreeEquivalence(42)).toBe('2.0 trees needed to offset annually');
   });
 
-  it('getFallbackResult returns a demo scenario', () => {
+  it('getCategoryAverage computes arithmetic mean from EMISSION_FACTORS', () => {
+    const mealAvg = getCategoryAverage('meal');
+    expect(mealAvg).toBeGreaterThan(0);
+    expect(typeof mealAvg).toBe('number');
+  });
+
+  it('getFallbackResult returns a programmatic offline estimate with notice', () => {
     const result = getFallbackResult('meal');
     expect(result).toHaveProperty('title');
     expect(result).toHaveProperty('estimatedCarbonKg');
+    expect(result.isOfflineEstimate).toBe(true);
+    expect(result.notice).toContain('Offline estimate');
+    expect(result.estimatedCarbonKg).toBe(getCategoryAverage('meal'));
   });
 
   it('generateLocalFutures creates dynamic strings', () => {

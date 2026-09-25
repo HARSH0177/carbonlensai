@@ -1,0 +1,92 @@
+[
+  {
+    "id": "case_01",
+    "name": "Dal Tadka with Steamed Basmati Rice",
+    "category": "meal",
+    "items": ["Dal Rice"],
+    "trueCarbonKg": 0.85,
+    "trueGrade": "A",
+    "sourceLCA": "Poore & Nemecek (2018) Science; Agribalyse 3.1.1 (0.85 kg CO2e / 350g serving)"
+  },
+  {
+    "id": "case_02",
+    "name": "Roti with Mixed Vegetable Curry (Aloo Gobi)",
+    "category": "meal",
+    "items": ["Roti Sabzi", "Aloo Gobi"],
+    "trueCarbonKg": 1.10,
+    "trueGrade": "B",
+    "sourceLCA": "Poore & Nemecek (2018); Indian ICMR diet guidelines (1.10 kg CO2e / 300g serving)"
+  },
+  {
+    "id": "case_03",
+    "name": "Chicken Curry with Rice",
+    "category": "meal",
+    "items": ["Biryani Chicken"],
+    "trueCarbonKg": 3.40,
+    "trueGrade": "C",
+    "sourceLCA": "Poore & Nemecek (2018); DEFRA Food GHG Database (3.40 kg CO2e / 400g serving)"
+  },
+  {
+    "id": "case_04",
+    "name": "Paneer Butter Masala",
+    "category": "meal",
+    "items": ["Paneer Butter Masala"],
+    "trueCarbonKg": 1.80,
+    "trueGrade": "B",
+    "sourceLCA": "Agribalyse dairy life-cycle intensity (1.80 kg CO2e / 350g serving)"
+  },
+  {
+    "id": "case_05",
+    "name": "Mutton Biryani (Bone-in Goat Meat)",
+    "category": "meal",
+    "items": ["Biryani Mutton"],
+    "trueCarbonKg": 8.50,
+    "trueGrade": "E",
+    "sourceLCA": "Poore & Nemecek (2018) ruminant meat factor (8.50 kg CO2e / 400g serving)"
+  },
+  {
+    "id": "case_06",
+    "name": "Fresh Produce Basket (1kg Onions, 1kg Tomatoes, 1kg Potatoes)",
+    "category": "grocery",
+    "items": ["Onions", "Tomatoes", "Potatoes"],
+    "trueCarbonKg": 1.70,
+    "trueGrade": "A",
+    "sourceLCA": "DEFRA Horticultural crop table (0.50 + 0.80 + 0.40 = 1.70 kg CO2e)"
+  },
+  {
+    "id": "case_07",
+    "name": "Dairy Grocery Basket (1L Milk, 250g Paneer, 500g Curd)",
+    "category": "grocery",
+    "items": ["Milk", "Paneer", "Curd / Yogurt"],
+    "trueCarbonKg": 10.00,
+    "trueGrade": "D",
+    "sourceLCA": "Agribalyse Dairy lifecycle table (3.2 + 5.0 + 1.8 = 10.00 kg CO2e)"
+  },
+  {
+    "id": "case_08",
+    "name": "Staples Basket (1kg Rice, 1kg Wheat Flour, 1kg Dal)",
+    "category": "grocery",
+    "items": ["Rice", "Wheat Flour", "Dal / Pulses"],
+    "trueCarbonKg": 7.00,
+    "trueGrade": "C",
+    "sourceLCA": "Poore & Nemecek grain & legume table (4.0 + 1.2 + 1.8 = 7.00 kg CO2e)"
+  },
+  {
+    "id": "case_09",
+    "name": "100 kWh Monthly Residential Grid Power",
+    "category": "energy",
+    "items": ["Electricity Monthly"],
+    "trueCarbonKg": 82.00,
+    "trueGrade": "D",
+    "sourceLCA": "Central Electricity Authority (CEA) India CO2 baseline database v19 (~0.82 kg/kWh)"
+  },
+  {
+    "id": "case_10",
+    "name": "AC Usage (6 Hours Daily Cooling)",
+    "category": "energy",
+    "items": ["AC Usage"],
+    "trueCarbonKg": 1.20,
+    "trueGrade": "A",
+    "sourceLCA": "1.5 Ton 3-star Inverter AC ~1.2 kWh/hr x 0.82 kg/kWh CEA grid factor"
+  }
+]

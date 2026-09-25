@@ -2,17 +2,45 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getFallbackResult, generateLocalFutures } from './carbon-engine';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const PROXY_URL = import.meta.env.VITE_PROXY_API_URL || import.meta.env.VITE_CLOUD_FUNCTION_URL;
 let genAI = null;
-let isApiDown = false;
 
-// Fix invalid model name
+// Stateful Circuit Breaker with Half-Open probe
+let isApiDown = false;
+let apiDownSince = null;
+const COOLDOWN_MS = 5 * 60 * 1000; // 5 min half-open retry window
+
+export function shouldAttemptLiveCall() {
+  if (!isApiDown) return true;
+  if (Date.now() - apiDownSince > COOLDOWN_MS) {
+    // Half-open state: allow a single probe request through
+    return true;
+  }
+  return false;
+}
+
+export function tripCircuit() {
+  isApiDown = true;
+  apiDownSince = Date.now();
+  console.warn('Circuit breaker tripped: Gemini API marked down. Cooldown: 5 minutes.');
+}
+
+export function resetCircuit() {
+  if (isApiDown) {
+    console.info('Circuit breaker reset: Gemini API live call succeeded.');
+  }
+  isApiDown = false;
+  apiDownSince = null;
+}
+
+// Model specification
 const GEMINI_MODEL = 'gemini-3.5-flash';
 
 if (apiKey && apiKey !== 'your_gemini_api_key_here') {
   genAI = new GoogleGenerativeAI(apiKey);
 }
 
-// Circuit breaker helper: only disable the API session on rate limit (HTTP 429) or quota errors
+// Circuit breaker helper: only trip on rate limit (HTTP 429) or quota errors
 function shouldTripCircuitBreaker(error) {
   const status = error?.status || error?.statusCode || 0;
   const msg = (error?.message || '').toLowerCase();
@@ -44,12 +72,32 @@ async function fileToGenerativePart(file) {
 }
 
 export async function analyzeImage(imageFile, scanType) {
-  if (!genAI || isApiDown) {
-    console.warn('Gemini API disabled or rate-limited, using fallback local engine.');
-    return new Promise(resolve => setTimeout(() => resolve(getFallbackResult(scanType)), 1500));
+  const hasLiveBackend = Boolean(PROXY_URL || genAI);
+  if (!hasLiveBackend || !shouldAttemptLiveCall()) {
+    console.warn('Gemini live backend unavailable or in circuit cooldown. Using deterministic offline category estimator.');
+    return new Promise(resolve => setTimeout(() => resolve(getFallbackResult(scanType)), 400));
   }
 
-  try {
+  const executeCall = async () => {
+    // Priority 1: Secure Server-Side Cloud Function Proxy (keeps API key off client)
+    if (PROXY_URL) {
+      const imagePart = await fileToGenerativePart(imageFile);
+      const res = await fetch(`${PROXY_URL.replace(/\/$/, '')}/analyzeImage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          base64Data: imagePart.inlineData.data,
+          mimeType: imagePart.inlineData.mimeType,
+          scanType: scanType || 'meal'
+        })
+      });
+      if (!res.ok) {
+        throw new Error(`Proxy error HTTP ${res.status}: ${await res.text()}`);
+      }
+      return await res.json();
+    }
+
+    // Priority 2: Direct Client Call (Development/Fallback with client env key)
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     const imagePart = await fileToGenerativePart(imageFile);
 
@@ -79,13 +127,29 @@ export async function analyzeImage(imageFile, scanType) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API Timeout')), 10000))
     ]);
     const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
-    
     return JSON.parse(responseText);
+  };
+
+  try {
+    const parsed = await executeCall();
+    resetCircuit();
+    return parsed;
   } catch (error) {
+    // Retry once if HTTP 404 (transient model alias issue)
+    if (error?.status === 404 || error?.message?.includes('404')) {
+      console.warn('Transient 404 model alias error — performing single retry...');
+      try {
+        const retryParsed = await executeCall();
+        resetCircuit();
+        return retryParsed;
+      } catch (retryErr) {
+        console.error('Retry after 404 failed:', retryErr);
+      }
+    }
+
     console.error('Gemini API Error:', error);
     if (shouldTripCircuitBreaker(error)) {
-      isApiDown = true;
-      console.warn('Gemini quota exhausted — falling back to local engine for this session.');
+      tripCircuit();
     } else {
       console.warn('Transient Gemini error — will retry on next call.', error.message);
     }
@@ -102,7 +166,7 @@ export async function generateFutures(sliderState) {
     foodDelivery: Math.min(Math.max(Number(sliderState.foodDelivery) || 5, 0), 100),
   };
 
-  if (!genAI || isApiDown) {
+  if (!genAI || !shouldAttemptLiveCall()) {
     return generateLocalFutures(safeState);
   }
 
@@ -132,13 +196,13 @@ export async function generateFutures(sliderState) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API Timeout')), 10000))
     ]);
     const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
-    
-    return JSON.parse(responseText);
+    const parsed = JSON.parse(responseText);
+    resetCircuit();
+    return parsed;
   } catch (error) {
     console.error('Gemini Futures Error:', error);
     if (shouldTripCircuitBreaker(error)) {
-      isApiDown = true;
-      console.warn('Gemini quota exhausted — falling back to local engine for this session.');
+      tripCircuit();
     } else {
       console.warn('Transient Gemini error — will retry on next call.', error.message);
     }

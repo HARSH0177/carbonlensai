@@ -89,10 +89,20 @@ export default function ResultsPage() {
         </div>
         <div className="lg:col-span-7 space-y-6">
           <Card variant="glass">
+            {result.isOfflineEstimate && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2 text-amber-800 text-xs font-medium">
+                <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                <span>{result.notice || 'Offline estimate — live AI analysis unavailable. Footprint derived from category factor tables.'}</span>
+              </div>
+            )}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h1 className="text-3xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--forest)' }}>Analysis Complete</h1>
-                <p style={{ color: 'var(--muted)' }}>Estimated environmental impact.</p>
+                <h1 className="text-3xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--forest)' }}>
+                  {result.isOfflineEstimate ? 'Offline Estimate' : 'Analysis Complete'}
+                </h1>
+                <p style={{ color: 'var(--muted)' }}>
+                  {result.isOfflineEstimate ? 'Standard category baseline calculation.' : 'Estimated environmental impact.'}
+                </p>
               </div>
               <Badge grade={result.carbonGrade} size="lg" className="-mt-2 ring-4 ring-white" />
             </div>

@@ -1,5 +1,5 @@
-import { EMISSION_FACTORS } from '../data/emission-factors';
-import { DEMO_SCENARIOS } from '../data/demo-scenarios';
+import { EMISSION_FACTORS } from '../data/emission-factors.js';
+import { DEMO_SCENARIOS } from '../data/demo-scenarios.js';
 
 export function estimateFromItems(items, category) {
   let total = 0;
@@ -62,18 +62,91 @@ export function getRupeeEquivalent(co2eKg) {
   return `Environmental cost: ~₹${cost}`;
 }
 
+export function getCategoryAverage(scanType) {
+  // Normalize scanType to EMISSION_FACTORS category keys
+  const categoryKey = (scanType === 'electricity_bill' || scanType === 'utility_bill')
+    ? 'energy'
+    : (scanType === 'receipt')
+      ? 'shopping'
+      : (scanType || 'meal');
+
+  const matchingFactors = EMISSION_FACTORS.filter(f => f.category === categoryKey);
+  if (matchingFactors.length === 0) {
+    const allSum = EMISSION_FACTORS.reduce((sum, f) => sum + f.co2eKg, 0);
+    return parseFloat((allSum / EMISSION_FACTORS.length).toFixed(2));
+  }
+  const sum = matchingFactors.reduce((acc, f) => acc + f.co2eKg, 0);
+  return parseFloat((sum / matchingFactors.length).toFixed(2));
+}
+
 export function getFallbackResult(scanType) {
-  // Return a seeded demo scenario based on type
-  const typeMap = {
-    meal: DEMO_SCENARIOS[1], // Chicken Biryani
-    grocery: DEMO_SCENARIOS[2],
-    receipt: DEMO_SCENARIOS[3],
-    electricity_bill: DEMO_SCENARIOS[4],
-    utility_bill: DEMO_SCENARIOS[5],
-    default: DEMO_SCENARIOS[0]
+  // Compute category average programmatically directly from EMISSION_FACTORS table
+  const categoryAvg = getCategoryAverage(scanType);
+
+  const categoryMetadata = {
+    meal: {
+      title: 'Standard Composite Meal',
+      items: ['Vegetarian / Non-Vegetarian Food Portions'],
+      story: `Estimated programmatically from the average of ${EMISSION_FACTORS.filter(f => f.category === 'meal').length} meal emission factors in the database.`,
+      recommendation: 'Incorporate seasonal local vegetables and unpolished grains to further reduce meal footprint by ~15%.',
+      savings: '₹20 - ₹40'
+    },
+    grocery: {
+      title: 'Standard Grocery Basket',
+      items: ['Pantry Staples & Produce Basket'],
+      story: `Estimated programmatically from the average of ${EMISSION_FACTORS.filter(f => f.category === 'grocery').length} grocery factors in the database.`,
+      recommendation: 'Favor loose seasonal produce over plastic-wrapped imported goods to minimize transport and packaging footprint.',
+      savings: '₹50 - ₹100'
+    },
+    receipt: {
+      title: 'Retail Store Receipt',
+      items: ['Consumer Retail Items'],
+      story: `Estimated programmatically from the average of ${EMISSION_FACTORS.filter(f => f.category === 'shopping').length} consumer goods factors in the database.`,
+      recommendation: 'Opt for refill packs and concentrated formulas where available.',
+      savings: '₹30 - ₹60'
+    },
+    electricity_bill: {
+      title: 'Residential Electricity Bill',
+      items: ['Domestic Power Usage'],
+      story: 'Estimated programmatically from domestic energy factors in the database (~0.82 kg CO2e per kWh tier).',
+      recommendation: 'Raise AC thermostat setting by 2°C (e.g. 24°C to 26°C) to cut monthly refrigeration load by up to 12%.',
+      savings: '₹250 - ₹450'
+    },
+    utility_bill: {
+      title: 'Domestic Utility Bill',
+      items: ['Municipal Utility Services'],
+      story: 'Estimated programmatically from utility energy and water factors in the database.',
+      recommendation: 'Install low-flow aerators on kitchen and bathroom taps to reduce heated water volume.',
+      savings: '₹80 - ₹150'
+    },
+    default: {
+      title: 'General Consumer Item',
+      items: ['Standard Consumer Footprint'],
+      story: `Derived from the programmatic mean across all ${EMISSION_FACTORS.length} emission factors in the database.`,
+      recommendation: 'Prioritize durable goods with modular repairability over single-cycle alternatives.',
+      savings: '₹50'
+    }
   };
-  
-  return typeMap[scanType] || typeMap.default;
+
+  const config = categoryMetadata[scanType] || categoryMetadata.default;
+  const grade = getGrade(categoryAvg, scanType || 'default');
+  const annualKg = categoryAvg * 365;
+
+  return {
+    isOfflineEstimate: true,
+    notice: 'Offline estimate — lower confidence, based on programmatic category averages',
+    inputType: scanType || 'default',
+    title: config.title,
+    detectedItems: config.items,
+    estimatedCarbonKg: categoryAvg,
+    carbonGrade: grade,
+    confidence: 0.35, // Honestly reflect offline heuristic confidence, not 90%+
+    recommendation: config.recommendation,
+    carbonStory: config.story,
+    futureImpact: `If repeated daily, this lifestyle component represents approximately ${(categoryAvg * 30).toFixed(1)} kg CO₂e monthly.`,
+    treeEquivalence: getTreeEquivalence(annualKg),
+    rupeeEquivalent: `Environmental cost: ~₹${Math.round(categoryAvg * 15)} (estimated savings: ${config.savings})`
+  };
 }
 
 export function generateLocalFutures(state) {
