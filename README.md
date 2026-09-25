@@ -95,7 +95,9 @@ CarbonLensAI was developed for **PromptWars Virtual** organized by **Google for 
 
 ## 🧪 Systematic Evaluation Harness & LCA Ground-Truth Audit
 
-To evaluate accuracy against empirical standards, CarbonLensAI includes a standalone evaluation suite (`eval/run_eval.js`) benchmarking estimates against **peer-reviewed Life Cycle Assessment (LCA)** reference databases (Poore & Nemecek 2018 *Science*, Agribalyse 3.1.1, and CEA India Grid v19):
+To evaluate calculation accuracy against empirical standards, CarbonLensAI includes a standalone evaluation suite (`eval/run_eval.js`) benchmarking the deterministic emission factor engine against **peer-reviewed Life Cycle Assessment (LCA)** reference databases (Poore & Nemecek 2018 *Science*, Agribalyse 3.1.1, and CEA India Grid v19):
+
+> **Evaluation Scope**: This benchmark measures the accuracy of the **deterministic calculation layer** against literature ground truth given verified item masses and electricity units (achieving 8.95% MAPE and 97.8% pairwise swap concordance). End-to-end photo-to-mass perception accuracy requires a dataset of scale-weighed meals and remains a documented future boundary (see [`eval/results.md`](eval/results.md)).
 
 ```text
 ====================================================================
