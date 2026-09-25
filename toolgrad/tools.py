@@ -222,8 +222,8 @@ class SustainabilityToolKit:
     def _tool_estimate_preparation_impact(self, base_co2e_kg: float, cooking_method: str, duration_minutes: float = 30.0) -> Dict[str, Any]:
         """
         Calculates additive cooking energy emissions (kWh electric or LPG consumption).
-        Source: Frankowska et al. (2019) 'Energy use and GHG emissions of home-cooked meals' +
-        Central Electricity Authority (CEA) India v19 grid emission factor (0.82 kg CO2e/kWh).
+        Source: Frankowska et al. (2020) 'Energy use and greenhouse gas emissions of home-cooked meals', Nature Food +
+        Central Electricity Authority (CEA) India CO2 Baseline Database (0.716 kg CO2e/kWh weighted national grid average).
         """
         # Average power draw / burner power in kW
         method_power_kw = {
@@ -235,7 +235,7 @@ class SustainabilityToolKit:
         }
         power_kw = method_power_kw.get(cooking_method.lower(), 0.70)
         energy_kwh = round((duration_minutes / 60.0) * power_kw, 3)
-        grid_factor_india = 0.82  # CEA India v19 baseline (kg CO2e / kWh)
+        grid_factor_india = 0.716  # CEA India weighted national grid average baseline (kg CO2e / kWh)
         cooking_emissions = round(energy_kwh * grid_factor_india, 3)
         adjusted_total = round(base_co2e_kg + cooking_emissions, 3)
 
@@ -248,7 +248,7 @@ class SustainabilityToolKit:
             "grid_emission_factor_kg_per_kwh": grid_factor_india,
             "cooking_overhead_kg": cooking_emissions,
             "adjusted_total_co2e_kg": adjusted_total,
-            "lca_source": "CEA India v19 / Frankowska et al. (2019)"
+            "lca_source": "CEA India CO2 Baseline Database (0.716 kg/kWh) / Frankowska et al. (2020) Nature Food"
         }
 
     def _tool_compute_mac_abatement_cost(self, baseline_item: str, swapped_item: str, price_delta_inr: float, co2e_reduction_kg: float) -> Dict[str, Any]:
