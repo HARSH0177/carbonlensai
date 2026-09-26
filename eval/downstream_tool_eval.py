@@ -191,10 +191,74 @@ Return STRICTLY a JSON object with:
             "latency_s": 0.0
         }
 
+def evaluate_generic_few_shot(synthesizer: ToolGradSynthesizer, test_case: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates generic few-shot baseline (Ablation Condition):
+    Provides 2 standard hand-written input->tool demonstrations without gradient critique or category isolation guidance.
+    """
+    tools_schema = json.dumps(synthesizer.tool_definitions, indent=2)
+    generic_demos = """Demonstration 1:
+User Query: "What is the carbon impact of 200g of chicken?"
+Tool Call: lookup_emission_factor
+Arguments: {"item_name": "chicken", "grams": 200}
+
+Demonstration 2:
+User Query: "What can I replace paneer with to reduce my grocery emissions?"
+Tool Call: find_low_carbon_swap
+Arguments: {"current_item": "paneer", "category": "grocery", "target_max_co2e": 2.0}"""
+
+    prompt = f"""You are an environmental intelligence assistant.
+
+Demonstrations:
+{generic_demos}
+
+Available Tools:
+{tools_schema}
+
+User Query:
+"{test_case['user_query']}"
+
+Select the SINGLE best first tool to call to address the user query.
+Return STRICTLY a JSON object with:
+{{
+  "thought": "Brief explanation of your decision",
+  "tool": "name_of_the_selected_tool",
+  "arguments": {{ ... tool arguments ... }}
+}}"""
+
+    t0 = time.time()
+    try:
+        raw_text = synthesizer._call_gemini(prompt, temperature=0.0, json_mode=True)
+        res = synthesizer._extract_json(raw_text)
+        elapsed = round(time.time() - t0, 3)
+        tool_name = res.get("tool", "")
+        args = res.get("arguments", {})
+        is_tool_correct = tool_name in test_case["acceptable_first_tools"]
+        is_schema_valid = isinstance(args, dict) and len(args) > 0
+        return {
+            "status": "success",
+            "condition": "generic_few_shot",
+            "tool": tool_name,
+            "arguments": args,
+            "is_tool_correct": is_tool_correct,
+            "is_schema_valid": is_schema_valid,
+            "latency_s": elapsed
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "condition": "generic_few_shot",
+            "error": str(e),
+            "is_tool_correct": False,
+            "is_schema_valid": False,
+            "latency_s": 0.0
+        }
+
 def run_downstream_evaluation():
     print("==================================================================")
-    print("  CarbonLens ToolGrad Downstream Evaluation Harness (ACL 2026)    ")
-    print(f"  Testing {len(HELD_OUT_TEST_QUERIES)} Held-Out Queries: Zero-Shot Baseline vs. ToolGrad")
+    print("  CarbonLens ToolGrad Downstream Ablation Harness (ACL 2026)      ")
+    print(f"  Pilot Scale: {len(HELD_OUT_TEST_QUERIES)} Held-Out Queries across 3 Conditions:")
+    print("  1. Zero-Shot  |  2. Generic Few-Shot (Ablation)  |  3. ToolGrad")
     print("==================================================================\n")
 
     synthesizer = ToolGradSynthesizer()
@@ -202,6 +266,7 @@ def run_downstream_evaluation():
     print(f"[INFO] Loaded {len(exemplars)} ToolGrad synthesized exemplar trajectories for supervision.")
 
     results_zero_shot = []
+    results_generic_fs = []
     results_toolgrad = []
 
     for idx, case in enumerate(HELD_OUT_TEST_QUERIES, 1):
@@ -211,55 +276,70 @@ def run_downstream_evaluation():
         # 1. Zero-shot
         zs_res = evaluate_zero_shot(synthesizer, case)
         results_zero_shot.append(zs_res)
-        print(f"  [Zero-Shot] Tool: '{zs_res.get('tool')}' | Correct: {zs_res['is_tool_correct']}")
+        err_msg = f" (Error: {zs_res.get('error')})" if zs_res.get('error') else ""
+        print(f"  [Zero-Shot]    Tool: '{zs_res.get('tool')}' | Correct: {zs_res['is_tool_correct']}{err_msg}")
+        time.sleep(4)
 
-        # 2. ToolGrad-supervised
+        # 2. Generic Few-Shot (Ablation)
+        gfs_res = evaluate_generic_few_shot(synthesizer, case)
+        results_generic_fs.append(gfs_res)
+        err_msg = f" (Error: {gfs_res.get('error')})" if gfs_res.get('error') else ""
+        print(f"  [Generic FS]   Tool: '{gfs_res.get('tool')}' | Correct: {gfs_res['is_tool_correct']}{err_msg}")
+        time.sleep(4)
+
+        # 3. ToolGrad-supervised
         tg_res = evaluate_toolgrad_supervised(synthesizer, case, exemplars)
         results_toolgrad.append(tg_res)
-        print(f"  [ToolGrad]  Tool: '{tg_res.get('tool')}' | Correct: {tg_res['is_tool_correct']}")
+        err_msg = f" (Error: {tg_res.get('error')})" if tg_res.get('error') else ""
+        print(f"  [ToolGrad ICL] Tool: '{tg_res.get('tool')}' | Correct: {tg_res['is_tool_correct']}{err_msg}")
+        time.sleep(4)
 
-        time.sleep(3)
-
-    # Compute comparative metrics
+    # Compute comparative metrics programmatically
     total = len(HELD_OUT_TEST_QUERIES)
     zs_acc = round((sum(1 for r in results_zero_shot if r["is_tool_correct"]) / total) * 100, 1)
+    gfs_acc = round((sum(1 for r in results_generic_fs if r["is_tool_correct"]) / total) * 100, 1)
     tg_acc = round((sum(1 for r in results_toolgrad if r["is_tool_correct"]) / total) * 100, 1)
+
     zs_valid = round((sum(1 for r in results_zero_shot if r["is_schema_valid"]) / total) * 100, 1)
+    gfs_valid = round((sum(1 for r in results_generic_fs if r["is_schema_valid"]) / total) * 100, 1)
     tg_valid = round((sum(1 for r in results_toolgrad if r["is_schema_valid"]) / total) * 100, 1)
+
     zs_decomp = round((sum(1 for r in results_zero_shot if r.get("tool") == "calculate_recipe_lca") / total) * 100, 1)
+    gfs_decomp = round((sum(1 for r in results_generic_fs if r.get("tool") == "calculate_recipe_lca") / total) * 100, 1)
     tg_decomp = round((sum(1 for r in results_toolgrad if r.get("tool") == "calculate_recipe_lca") / total) * 100, 1)
 
     print("\n==================================================================")
-    print("  DOWNSTREAM EVALUATION COMPARATIVE METRICS SUMMARY")
+    print("  3-WAY DOWNSTREAM ABLATION METRICS SUMMARY (PILOT SCALE)")
     print("==================================================================")
-    print(f"  Zero-Shot Baseline Accuracy        : {zs_acc}% ({sum(1 for r in results_zero_shot if r['is_tool_correct'])}/{total})")
-    print(f"  ToolGrad Supervised Accuracy       : {tg_acc}% ({sum(1 for r in results_toolgrad if r['is_tool_correct'])}/{total})")
-    print(f"  Zero-Shot Schema Validity Rate     : {zs_valid}%")
-    print(f"  ToolGrad Schema Validity Rate      : {tg_valid}%")
-    print(f"  Zero-Shot Recipe Decomposition Rate: {zs_decomp}%")
-    print(f"  ToolGrad Recipe Decomposition Rate : {tg_decomp}%")
+    print(f"  Zero-Shot Accuracy                 : {zs_acc}%")
+    print(f"  Generic Few-Shot Accuracy (Ablation): {gfs_acc}%")
+    print(f"  ToolGrad Supervised Accuracy       : {tg_acc}%")
+    print(f"  ToolGrad vs Generic FS Delta       : +{round(tg_acc - gfs_acc, 1)}%")
+    print(f"  Recipe Decomposition (Zero/Generic/ToolGrad): {zs_decomp}% / {gfs_decomp}% / {tg_decomp}%")
     print("==================================================================")
 
     out_md = os.path.abspath(os.path.join(os.path.dirname(__file__), "downstream_results.md"))
     with open(out_md, "w", encoding="utf-8") as f:
         f.write("# CarbonLens-ToolGrad Downstream Evaluation Report\n\n")
-        f.write("Empirical validation of downstream tool-use capabilities on held-out user sustainability queries.\n\n")
-        f.write("> **Evaluation Methodology Note**: This benchmark evaluates **In-Context Trajectory Supervision (Few-Shot Exemplar Prompting as an inference-time proxy for Supervised Fine-Tuning)** against a Zero-Shot raw-schema baseline. For full parameter-updated training on consumer or cluster GPUs, see the committed LoRA training pipeline at [`toolgrad/train_sft_lora.py`](../toolgrad/train_sft_lora.py).\n\n")
-        f.write("## 1. Comparative Metrics Table\n\n")
-        f.write("| Evaluation Metric | Zero-Shot Baseline | ToolGrad In-Context Supervised | Absolute $\\Delta$ |\n")
-        f.write("| :--- | :---: | :---: | :---: |\n")
-        f.write(f"| **Tool Selection Accuracy** | **{zs_acc}%** | **{tg_acc}%** | **+{round(tg_acc - zs_acc, 1)}%** |\n")
-        f.write(f"| **Parameter Schema Validity** | **{zs_valid}%** | **{tg_valid}%** | **+{round(tg_valid - zs_valid, 1)}%** |\n")
-        f.write(f"| **Recipe Decomposition Rate** | **{zs_decomp}%** | **{tg_decomp}%** | **+{round(tg_decomp - zs_decomp, 1)}%** |\n")
-        f.write(f"| **Held-Out Test Queries** | {total} | {total} | — |\n\n")
+        f.write("Empirical 3-condition ablation study measuring downstream tool-use capabilities on held-out user sustainability queries.\n\n")
+        f.write("> **Scale & Scope Notice**: This evaluation is conducted at **toy/proof-of-concept pilot scale (5 held-out queries, 5 synthesized trajectories)** to isolate the specific effect of ToolGrad gradient conditioning vs. generic few-shot demonstrations before large-scale GPU benchmarking.\n\n")
+        f.write("> **Evaluation Methodology Note**: This benchmark evaluates **In-Context Trajectory Supervision (Few-Shot Exemplar Prompting as an inference-time proxy for Supervised Fine-Tuning)**. For parameter-updated training on consumer or cluster GPUs, see the committed LoRA training pipeline at [`toolgrad/train_sft_lora.py`](../toolgrad/train_sft_lora.py).\n\n")
+        f.write("## 1. 3-Way Comparative Ablation Table\n\n")
+        f.write("| Evaluation Metric | 1. Zero-Shot Baseline | 2. Generic Few-Shot (Ablation) | 3. ToolGrad In-Context Supervised | ToolGrad vs. Generic $\\Delta$ |\n")
+        f.write("| :--- | :---: | :---: | :---: | :---: |\n")
+        f.write(f"| **Tool Selection Accuracy** | **{zs_acc}%** | **{gfs_acc}%** | **{tg_acc}%** | **+{round(tg_acc - gfs_acc, 1)}%** |\n")
+        f.write(f"| **Parameter Schema Validity** | **{zs_valid}%** | **{gfs_valid}%** | **{tg_valid}%** | **+{round(tg_valid - gfs_valid, 1)}%** |\n")
+        f.write(f"| **Recipe Decomposition Rate** | **{zs_decomp}%** | **{gfs_decomp}%** | **{tg_decomp}%** | **+{round(tg_decomp - gfs_decomp, 1)}%** |\n")
+        f.write(f"| **Pilot Test Query Count** | {total} | {total} | {total} | — |\n\n")
         f.write("## 2. Granular Per-Query Log\n\n")
-        f.write("| ID | Held-Out User Query | Zero-Shot Tool | ToolGrad Tool | Status |\n")
-        f.write("| :--- | :--- | :---: | :---: | :---: |\n")
+        f.write("| ID | Held-Out User Query | Zero-Shot Tool | Generic Few-Shot Tool | ToolGrad Supervised Tool | Status |\n")
+        f.write("| :--- | :--- | :---: | :---: | :---: | :---: |\n")
         for i, case in enumerate(HELD_OUT_TEST_QUERIES):
             zs = results_zero_shot[i]
+            gfs = results_generic_fs[i]
             tg = results_toolgrad[i]
             status = "PASS" if tg["is_tool_correct"] else "FAIL"
-            f.write(f"| `{case['id']}` | {case['user_query']} | `{zs.get('tool')}` | `{tg.get('tool')}` | **{status}** |\n")
+            f.write(f"| `{case['id']}` | {case['user_query']} | `{zs.get('tool')}` | `{gfs.get('tool')}` | `{tg.get('tool')}` | **{status}** |\n")
 
     print(f"[OK] Saved downstream evaluation report to: {out_md}\n")
 

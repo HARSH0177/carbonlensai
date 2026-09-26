@@ -4,6 +4,7 @@
 ### **Deterministic Life Cycle Assessment (LCA) Engine & Agentic Tool-Use Synthesis**
 *Multimodal Carbon Scanner, ToolGrad Synthesis (ACL 2026), and PromptWars Virtual Challenge 3 Verified Solution (`2026H2S06PWVCHL3-A01765`)*
 
+[![CI](https://github.com/HARSH0177/carbonlensai/actions/workflows/ci.yml/badge.svg)](https://github.com/HARSH0177/carbonlensai/actions)
 [![Tests](https://img.shields.io/badge/Unit_Tests-26_Passed_(Vitest_+_Pytest)-success?style=for-the-badge)](tests/)
 [![Evaluation](https://img.shields.io/badge/LCA_MAPE-3.15%25_(30_Cases)-blue?style=for-the-badge)](eval/results.md)
 [![Concordance](https://img.shields.io/badge/Pairwise_Concordance-99.1%25-green?style=for-the-badge)](eval/results.md)
@@ -93,7 +94,10 @@ CarbonLens enforces dual-language verification across both frontend reactivity a
 | **LCA Engine & ToolGrad** | `pytest` | **18 Passing** | Exact factor matching, category isolation, nutritional protein constraints, cooking thermodynamics, MAC cost, gradient injection, model failover |
 | **Frontend & Circuit Breaker** | `vitest` | **8 Passing** | Category average fallback, half-open circuit breaker, landing UI |
 | **Ground-Truth LCA Audit** | `node` | **30 Cases** | Literature MAPE (3.15%), MAE (0.04 kg), pairwise swap concordance (99.1%) |
-| **Downstream Tool Eval** | `python` | **5 Held-Out** | Held-out query tool dispatching (100% accuracy, 100% schema validity) |
+| **Downstream Ablation Eval** | `python` | **5 Pilot Cases** | 3-way ablation (Zero-Shot vs Generic Few-Shot vs ToolGrad In-Context Supervised) |
+
+> **Automated CI**: Pytest, Vitest, and the 30-case LCA benchmark are executed automatically on every push via [GitHub Actions CI](.github/workflows/ci.yml).
+
 
 ```bash
 # Run backend LCA toolkit & ToolGrad tests (18 passed)
