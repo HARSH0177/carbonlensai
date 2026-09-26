@@ -173,8 +173,8 @@
       <text x="12" y="20" class="card-title" fill="#135E33">Verified LCA Factors</text>
       <text x="12" y="38" class="card-body">&#x2022; Poore &amp; Nemecek 2018 (Science)</text>
       <text x="12" y="54" class="card-body">&#x2022; Agribalyse 3.1.1 + ICMR India</text>
-      <text x="12" y="70" class="card-body">&#x2022; 30-case benchmark (eval/testset.json)</text>
-      <text x="12" y="86" class="card-body">&#x2022; 3.15% MAPE | 0.04 kg MAE</text>
+      <text x="12" y="70" class="card-body">&#x2022; 10-case benchmark (eval/testset.json)</text>
+      <text x="12" y="86" class="card-body">&#x2022; 8.95% MAPE | 0.67 kg MAE</text>
     </g>
 
     <!-- Card 3: Thermodynamic Energy Engine -->

@@ -50,6 +50,6 @@ jobs:
         run: |
           npm test -- --run
 
-      - name: Run 30-Case Deterministic LCA Evaluation Audit
+      - name: Run 10-Case Deterministic LCA Evaluation Audit
         run: |
           node eval/run_eval.js
