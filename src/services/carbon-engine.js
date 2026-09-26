@@ -3,16 +3,24 @@ import { DEMO_SCENARIOS } from '../data/demo-scenarios.js';
 
 export function estimateFromItems(items, category) {
   let total = 0;
-  // Fallback simple estimation if no exact matches
   items.forEach(item => {
-    const match = EMISSION_FACTORS.find(ef => ef.name.toLowerCase().includes(item.toLowerCase()));
+    const itemLower = item.toLowerCase();
+    // 1. Exact match within category
+    let match = EMISSION_FACTORS.find(ef => (!category || ef.category === category) && ef.name.toLowerCase() === itemLower);
+    // 2. Exact match anywhere
+    if (!match) match = EMISSION_FACTORS.find(ef => ef.name.toLowerCase() === itemLower);
+    // 3. Substring match within category
+    if (!match && category) match = EMISSION_FACTORS.find(ef => ef.category === category && ef.name.toLowerCase().includes(itemLower));
+    // 4. Substring match anywhere
+    if (!match) match = EMISSION_FACTORS.find(ef => ef.name.toLowerCase().includes(itemLower));
+
     if (match) {
       total += match.co2eKg;
     } else {
       total += category === 'meal' ? 1.0 : 0.5; // default fallbacks
     }
   });
-  return total;
+  return parseFloat(total.toFixed(2));
 }
 
 export function estimateFromSliders(state) {

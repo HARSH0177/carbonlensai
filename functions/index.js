@@ -1,7 +1,12 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const GEMINI_MODEL = 'gemini-3.5-flash';
+const GEMINI_MODEL_CHAIN = [
+  'gemini-3.5-flash',
+  'gemini-flash-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-lite-latest'
+];
 
 /**
  * Server-side proxy function for CarbonLens image analysis.
@@ -30,7 +35,6 @@ exports.analyzeImage = onRequest({
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `
       You are an expert carbon footprint estimator for the Indian context. 
@@ -60,11 +64,25 @@ exports.analyzeImage = onRequest({
       }
     };
 
-    const result = await model.generateContent([prompt, imagePart]);
-    const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
-    const parsed = JSON.parse(responseText);
-
-    return res.status(200).json(parsed);
+    let lastError = null;
+    for (const modelName of GEMINI_MODEL_CHAIN) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([prompt, imagePart]);
+        const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
+        const parsed = JSON.parse(responseText);
+        return res.status(200).json(parsed);
+      } catch (err) {
+        lastError = err;
+        const isModelUnavailable = err?.status === 404 || err?.status === 503 || err?.message?.includes('404') || err?.message?.includes('503');
+        if (isModelUnavailable) {
+          console.warn(`Cloud Function: Model ${modelName} returned ${err.status || err.message}, failing over to next model in chain...`);
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError || new Error('All Gemini model fallbacks exhausted in Cloud Function');
   } catch (err) {
     console.error('Error in analyzeImage Cloud Function:', err);
     return res.status(500).json({ error: err.message || 'Internal Server Error' });

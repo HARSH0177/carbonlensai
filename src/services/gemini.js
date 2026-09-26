@@ -33,8 +33,14 @@ export function resetCircuit() {
   apiDownSince = null;
 }
 
-// Model specification
-const GEMINI_MODEL = 'gemini-3.5-flash';
+// Model specification with centralized fallback chain
+export const GEMINI_MODEL_CHAIN = [
+  'gemini-3.5-flash',
+  'gemini-flash-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-lite-latest'
+];
+export const GEMINI_MODEL = GEMINI_MODEL_CHAIN[0];
 
 if (apiKey && apiKey !== 'your_gemini_api_key_here') {
   genAI = new GoogleGenerativeAI(apiKey);
@@ -97,37 +103,30 @@ export async function analyzeImage(imageFile, scanType) {
       return await res.json();
     }
 
-    // Priority 2: Direct Client Call (Development/Fallback with client env key)
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    // Priority 2: Direct Client Call with Multi-Model Fallback Chain
     const imagePart = await fileToGenerativePart(imageFile);
+    let lastError = null;
 
-    const prompt = `
-      You are an expert carbon footprint estimator for the Indian context. 
-      Analyze this image (type: ${scanType}). 
-      Identify the items and estimate the carbon footprint in kg CO2e.
-      
-      Respond STRICTLY with a valid JSON object matching this schema:
-      {
-        "inputType": "meal|grocery|receipt|electricity_bill|utility_bill",
-        "detectedItems": ["item1", "item2"],
-        "estimatedCarbonKg": 0.0,
-        "carbonGrade": "A|B|C|D|E",
-        "confidence": 0.0,
-        "recommendation": "one actionable swap with approximate ₹ savings",
-        "carbonStory": "2-3 sentence narrative about the impact",
-        "futureImpact": "if this repeats for 30 days...",
-        "treeEquivalence": "X trees needed to offset annually",
-        "rupeeEquivalent": "Environmental cost: ~₹Y"
+    for (const modelName of GEMINI_MODEL_CHAIN) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await Promise.race([
+          model.generateContent([prompt, imagePart]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API Timeout')), 10000))
+        ]);
+        const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
+        return JSON.parse(responseText);
+      } catch (err) {
+        lastError = err;
+        const isModelUnavailable = err?.status === 404 || err?.status === 503 || err?.message?.includes('404') || err?.message?.includes('503');
+        if (isModelUnavailable) {
+          console.warn(`Model ${modelName} returned ${err.status || err.message}, failing over to next model in chain...`);
+          continue;
+        }
+        throw err;
       }
-      Do not include any markdown formatting like \`\`\`json. Just return the raw JSON object.
-    `;
-
-    const result = await Promise.race([
-      model.generateContent([prompt, imagePart]),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API Timeout')), 10000))
-    ]);
-    const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
-    return JSON.parse(responseText);
+    }
+    throw lastError || new Error('All Gemini model fallbacks exhausted');
   };
 
   try {
@@ -135,17 +134,6 @@ export async function analyzeImage(imageFile, scanType) {
     resetCircuit();
     return parsed;
   } catch (error) {
-    // Retry once if HTTP 404 (transient model alias issue)
-    if (error?.status === 404 || error?.message?.includes('404')) {
-      console.warn('Transient 404 model alias error — performing single retry...');
-      try {
-        const retryParsed = await executeCall();
-        resetCircuit();
-        return retryParsed;
-      } catch (retryErr) {
-        console.error('Retry after 404 failed:', retryErr);
-      }
-    }
 
     console.error('Gemini API Error:', error);
     if (shouldTripCircuitBreaker(error)) {
@@ -170,9 +158,7 @@ export async function generateFutures(sliderState) {
     return generateLocalFutures(safeState);
   }
 
-  try {
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-    const prompt = `
+  const prompt = `
       You are a "Carbon Futures Engine". Based on a user's lifestyle choices, generate three short outputs.
       
       Lifestyle parameters:
@@ -191,14 +177,31 @@ export async function generateFutures(sliderState) {
       Do not include any markdown formatting like \`\`\`json. Just return the raw JSON object.
     `;
 
-    const result = await Promise.race([
-      model.generateContent(prompt),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API Timeout')), 10000))
-    ]);
-    const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
-    const parsed = JSON.parse(responseText);
-    resetCircuit();
-    return parsed;
+  try {
+    let lastError = null;
+    for (const modelName of GEMINI_MODEL_CHAIN) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await Promise.race([
+          model.generateContent(prompt),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini API Timeout')), 10000))
+        ]);
+        const responseText = result.response.text().trim().replace(/^```json/i, '').replace(/```$/i, '').trim();
+        const parsed = JSON.parse(responseText);
+        resetCircuit();
+        return parsed;
+      } catch (error) {
+        lastError = error;
+        const isModelUnavailable = error?.status === 404 || error?.status === 503 || error?.message?.includes('404') || error?.message?.includes('503');
+        if (isModelUnavailable) {
+          console.warn(`Futures model ${modelName} returned ${error.status || error.message}, failing over to next model in chain...`);
+          continue;
+        }
+        break; // Non-model-availability errors (e.g. rate limit, parse error) should not cycle through all models
+      }
+    }
+
+    throw lastError || new Error('All Gemini model fallbacks exhausted');
   } catch (error) {
     console.error('Gemini Futures Error:', error);
     if (shouldTripCircuitBreaker(error)) {

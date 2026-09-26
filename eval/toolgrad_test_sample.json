@@ -2,8 +2,8 @@
   "scenario_goal": "Perform an end-to-end Life Cycle Assessment (LCA) on a non-vegetarian Indian dish (Chicken Biryani: 250g Chicken, 200g Rice), isolate the primary carbon hotspot, identify a viable lower-carbon protein swap, and evaluate the preparation method impact.",
   "pass_rate": 1.0,
   "num_tool_calls": 3,
-  "user_query": "Can you do a complete carbon footprint analysis for a standard Chicken Biryani made with 250g of chicken and 200g of rice? I want to know where the main emissions come from, what a good lower-carbon alternative protein swap would be, and how factoring in a typical 30-minute curry preparation method affects the total footprint.",
-  "assistant_response": "The complete Life Cycle Assessment for your Chicken Biryani (250g Chicken, 200g Rice) reveals a total ingredient carbon footprint of 2.525 kg CO2e. The primary carbon hotspot is the raw chicken, which accounts for 1.725 kg CO2e\u2014a staggering 68.3% of the total ingredient emissions\u2014while the 200g of rice contributes 0.8 kg CO2e. To lower this impact, switching the chicken to a sustainable alternative like Dal Rice can effectively reduce the protein footprint and offer a strong plant-based swap. Finally, incorporating the preparation impact for a 30-minute curry cooking method adds 0.268 kg CO2e in energy overhead (consuming 0.375 kWh based on the 0.716 kg/kWh grid factor), bringing the adjusted total footprint of the meal to 2.793 kg CO2e.",
+  "user_query": "Can you analyze the carbon footprint of my chicken biryani recipe made with 250g of chicken and 200g of rice, and help me figure out how to reduce its emissions by swapping out the main carbon driver?",
+  "assistant_response": "Your Chicken Biryani recipe (using 250g of chicken and 200g of rice) has a total carbon footprint of 2.525 kg CO2e. The primary carbon hotspot is the raw chicken, which accounts for 1.725 kg CO2e\u2014a staggering 68.3% of the total emissions (compared to 0.8 kg CO2e for the rice). If you are looking for whole meal alternatives, swapping to a meal like Dal Rice offers a lower carbon option. However, to preserve the recipe's integrity by replacing just the protein ingredient directly within grocery items, switching the chicken to potatoes yields a significantly lower carbon footprint at 0.4 kg CO2e per kg, achieving a reduction potential of 60.0%.",
   "execution_trace": [
     {
       "step": 1,
@@ -12,11 +12,11 @@
         "recipe_name": "Chicken Biryani",
         "ingredients": [
           {
-            "name": "Chicken",
+            "name": "chicken",
             "grams": 250
           },
           {
-            "name": "Rice",
+            "name": "rice",
             "grams": 200
           }
         ]
@@ -42,19 +42,21 @@
             "co2e_kg": 0.8
           }
         ]
-      }
+      },
+      "gradient_reasoning": "Initiating the end-to-end LCA by calculating the composite carbon emissions and identifying the hotspot for Chicken Biryani with 250g chicken and 200g rice."
     },
     {
       "step": 2,
       "tool": "find_low_carbon_swap",
       "arguments": {
         "current_item": "Chicken Raw",
-        "category": "meat",
+        "category": "meal",
         "target_max_co2e": 1.0
       },
       "execution_result": {
         "status": "success",
         "current_item": "Chicken Raw",
+        "target_category": "meal",
         "suggested_swap": "Dal Rice",
         "swap_co2e_per_kg": 0.8,
         "reduction_potential_pct": 20.0,
@@ -62,43 +64,46 @@
           "vegan",
           "staple"
         ]
-      }
+      },
+      "gradient_reasoning": "In accordance with the textual gradient, the next step evaluates a lower-carbon protein swap for the primary carbon hotspot (Chicken Raw) using the find_low_carbon_swap tool."
     },
     {
       "step": 3,
-      "tool": "estimate_preparation_impact",
+      "tool": "find_low_carbon_swap",
       "arguments": {
-        "base_co2e_kg": 2.525,
-        "cooking_method": "curry_gravy"
+        "current_item": "Chicken Raw",
+        "category": "grocery",
+        "target_max_co2e": 1.0
       },
       "execution_result": {
         "status": "success",
-        "base_co2e_kg": 2.525,
-        "cooking_method": "curry_gravy",
-        "duration_minutes": 30.0,
-        "energy_consumed_kwh": 0.375,
-        "grid_emission_factor_kg_per_kwh": 0.716,
-        "cooking_overhead_kg": 0.268,
-        "adjusted_total_co2e_kg": 2.793,
-        "lca_source": "CEA India CO2 Baseline Database (0.716 kg/kWh) / Frankowska et al. (2020) Nature Food"
-      }
+        "current_item": "Chicken Raw",
+        "target_category": "grocery",
+        "suggested_swap": "Potatoes",
+        "swap_co2e_per_kg": 0.4,
+        "reduction_potential_pct": 60.0,
+        "tags": [
+          "vegetable"
+        ]
+      },
+      "gradient_reasoning": "To address the gradient's feedback, I will now use 'find_low_carbon_swap' targeting a direct protein ingredient replacement ('Chicken Raw') within the 'grocery' category instead of a whole meal swap, ensuring culinary identity is preserved."
     }
   ],
   "textual_gradients": [
     {
       "step": 1,
       "tool": "calculate_recipe_lca",
-      "gradient": "Textual Gradient (Grad): The tool executed successfully with a valid status, accurately returning a total footprint of 2.525 kg CO2e for the specified portions. The emissions breakdown aligns well with regional LCA data, correctly identifying raw chicken as the dominant carbon hotspot at 68.3% of total emissions. To maximize emissions reduction, the next tool call should evaluate a viable lower-carbon protein swap for the chicken."
+      "gradient": "Textual Gradient (Grad): The tool executed successfully with a status of 'success' and provided a complete breakdown of emissions. The portions (250g chicken, 200g rice) and resulting footprint (2.525 kg CO2e) are physically realistic for a standard non-vegetarian Indian dish, correctly identifying raw chicken as the primary hotspot at 68.3% of total emissions. To maximize emissions reduction, the next tool call should evaluate a lower-carbon protein swap (such as paneer, lentils, or plant-based meat) to replace or reduce the chicken component."
     },
     {
       "step": 2,
       "tool": "find_low_carbon_swap",
-      "gradient": "Textual Gradient (Grad): The tool executed successfully, identifying \"Dal Rice\" as a lower-carbon alternative with a realistic emission rate of 0.8 kg CO2e/kg. However, since the goal is to evaluate a lower-carbon *protein swap* specifically within the context of Chicken Biryani rather than replacing the entire dish with another meal, \"Dal Rice\" lacks culinary precision for recipe integration. The next tool call should focus on a direct meat-to-legume or plant-based protein swap (such as paneer, soy chunks, or lentils specifically measured as a protein substitute) to maintain the authentic structure of the dish while maximizing emissions reduction."
+      "gradient": "Textual Gradient (Grad): The tool executed successfully, returning a viable lower-carbon meal swap with a 20.0% reduction potential. While \"Dal Rice\" is culturally and physically consistent with the Indian regional context, substituting the entire meal category alters the core recipe profile rather than isolating a protein swap for the Chicken Biryani. The next tool call should refine the swap search by targeting a direct protein ingredient replacement (e.g., Paneer, Jackfruit, or Plant-Based Meat) rather than a complete meal category to maintain the dish's identity while optimizing emissions."
     },
     {
       "step": 3,
-      "tool": "estimate_preparation_impact",
-      "gradient": "Textual Gradient (Grad): The tool executed successfully, returning a realistic energy overhead of 0.375 kWh and an adjusted total footprint of 2.793 kg CO2e for the curry/gravy cooking method using India's high grid emission factor. The resulting emissions align well with regional cooking practices and baseline data. The recommended directional vector for the next step is to evaluate a lower-carbon protein swap (such as paneer or plant-based alternatives) to assess potential reductions against this established baseline."
+      "tool": "find_low_carbon_swap",
+      "gradient": "Textual Gradient (Grad): The tool executed successfully, identifying potatoes as a low-carbon grocery swap with a significant 60% reduction potential. However, swapping chicken for potatoes fundamentally alters the dish's protein profile and culinary authenticity in the context of Chicken Biryani. The next tool call should explore culturally appropriate, high-protein plant-based alternatives (such as paneer, soya chunks, or lentils) or evaluate preparation method impacts to maintain the dish's identity while optimizing emissions."
     }
   ],
   "framework": "ToolGrad (ACL 2026 Findings - Inverted Answer-First Synthesis)"

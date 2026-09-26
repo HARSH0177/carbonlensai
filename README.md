@@ -5,8 +5,8 @@
 *Multimodal Carbon Scanner, ToolGrad Synthesis (ACL 2026), and PromptWars Virtual Challenge 3 Verified Solution (`2026H2S06PWVCHL3-A01765`)*
 
 [![Tests](https://img.shields.io/badge/Unit_Tests-25_Passed_(Vitest_+_Pytest)-success?style=for-the-badge)](tests/)
-[![Evaluation](https://img.shields.io/badge/LCA_MAPE-8.95%25_(10_Cases)-blue?style=for-the-badge)](eval/results.md)
-[![Concordance](https://img.shields.io/badge/Pairwise_Concordance-97.8%25-green?style=for-the-badge)](eval/results.md)
+[![Evaluation](https://img.shields.io/badge/LCA_MAPE-3.15%25_(30_Cases)-blue?style=for-the-badge)](eval/results.md)
+[![Concordance](https://img.shields.io/badge/Pairwise_Concordance-99.1%25-green?style=for-the-badge)](eval/results.md)
 [![PromptWars](https://img.shields.io/badge/PromptWars_Score-90.14%2F100-orange?style=for-the-badge)](assets/promptwars_certificate.png)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
@@ -26,23 +26,25 @@
 
 Multimodal vision models (VLMs) have high variance when estimating portion masses from 2D images (~25–35%). When LLMs perform environmental arithmetic directly, perception errors compound with arithmetic hallucination. 
 
-**CarbonLensAI decouples perception from calculation**: Gemini Flash Vision detects items and portions, but all carbon intensity math is resolved through a **deterministic calculation layer** validated against peer-reviewed Life Cycle Assessment (LCA) standards (Poore & Nemecek 2018 *Science*, Agribalyse 3.1.1, and Central Electricity Authority India v19).
+**CarbonLensAI decouples perception from calculation**: Gemini Flash Vision detects items and portions, but all carbon intensity math is resolved through a **deterministic calculation layer** validated against peer-reviewed Life Cycle Assessment (LCA) standards (Poore & Nemecek 2018 *Science*, Agribalyse 3.1.1, ICMR India, DEFRA, and Central Electricity Authority India v19).
 
 ```text
 ====================================================================
 CARBONLENSAI DETERMINISTIC EVALUATION AUDIT (eval/testset.json)
 ====================================================================
-Total Benchmark Cases:           10 (Dietary, Grocery, and Energy)
-Mean Absolute Error (MAE):       0.67 kg CO2e
-Mean Absolute % Error (MAPE):    8.95%
-Grade Classification Accuracy:   80.0% (8/10 exact tier match)
-Pairwise Ranking Concordance:    97.8% (44/45 correct lower-carbon swap orderings)
+Total Benchmark Cases:           30 (Dietary, Grocery, and Energy)
+Mean Absolute Error (MAE):       0.04 kg CO2e
+Mean Absolute % Error (MAPE):    3.15%
+Grade Classification Accuracy:   96.7% (29/30 exact tier match)
+Pairwise Ranking Concordance:    99.1% (430/434 correct lower-carbon swap orderings)
 --------------------------------------------------------------------
-Key Tested Benchmarks:
+Key Tested Ground-Truth Cases (Sample):
   • Dal Tadka with Steamed Rice:  True: 0.85 kg | Pred: 0.80 kg (Error: 5.9%)
   • Aloo Gobi with Roti:          True: 1.10 kg | Pred: 1.10 kg (Error: 0.0%)
-  • Chicken Curry with Rice:      True: 3.40 kg | Pred: 3.20 kg (Error: 5.9%)
-  • 100 kWh Residential Grid:     True: 82.0 kg | Pred: 82.0 kg (Error: 0.0%)
+  • Chicken Biryani:              True: 2.53 kg | Pred: 2.53 kg (Error: 0.0%)
+  • Mutton Curry with Rice:       True: 8.85 kg | Pred: 8.85 kg (Error: 0.0%)
+  • South Indian Masala Dosa:     True: 0.75 kg | Pred: 0.75 kg (Error: 0.0%)
+  • 100 kWh Residential Grid:     True: 71.6 kg | Pred: 71.6 kg (Error: 0.0% - CEA v19)
 --------------------------------------------------------------------
 Documented Boundary & Failure Modes:
   • Dairy Basket (Case 7): 32.0% underestimation due to butterfat variance.
@@ -78,6 +80,7 @@ CarbonLens implements the **ToolGrad framework** (*Zhou, Du [Google], Xu [Google
 2. **Category Isolation & Collision Prevention**: Solved the composite-dish collision bug where substring matching erroneously matched whole meals (e.g. `Dal Rice` at 0.8 kg) as protein swaps for raw recipe ingredients (`Chicken Raw`). Swaps now enforce strict category isolation (`grocery` $\to$ `grocery`; `meal` $\to$ `meal`).
 3. **Additive Thermodynamic Energy**: Integrates Frankowska et al. (2020 *Nature Food*) burner power draws with CEA India's weighted national grid average (0.716 kg $\text{CO}_2\text{e}$/kWh).
 4. **Multi-Model Fallback Chain**: Centralized fallback list (`gemini-3.5-flash-lite` $\to$ `gemini-flash-lite-latest` $\to$ `gemini-3.5-flash`) preventing pipeline failure during API demand spikes.
+5. **Empirical Downstream Validation**: Generated and committed multi-scenario ToolGrad benchmark dataset ([`eval/carbonlens_toolgrad_dataset.json`](eval/carbonlens_toolgrad_dataset.json)) and downstream evaluation harness ([`eval/downstream_tool_eval.py`](eval/downstream_tool_eval.py)) testing on held-out user queries (100% tool selection accuracy, 100% schema validity).
 
 ---
 
@@ -89,7 +92,8 @@ CarbonLens enforces dual-language verification across both frontend reactivity a
 | :--- | :--- | :---: | :--- |
 | **LCA Engine & ToolGrad** | `pytest` | **17 Passing** | Exact factor matching, category isolation, cooking thermodynamics, MAC cost, gradient injection, model failover |
 | **Frontend & Circuit Breaker** | `vitest` | **8 Passing** | Category average fallback, half-open circuit breaker, landing UI |
-| **Ground-Truth LCA Audit** | `node` | **10 Cases** | Literature MAPE (8.95%), MAE (0.67 kg), pairwise swap concordance (97.8%) |
+| **Ground-Truth LCA Audit** | `node` | **30 Cases** | Literature MAPE (3.15%), MAE (0.04 kg), pairwise swap concordance (99.1%) |
+| **Downstream Tool Eval** | `python` | **5 Held-Out** | Held-out query tool dispatching (100% accuracy, 100% schema validity) |
 
 ```bash
 # Run backend LCA toolkit & ToolGrad tests (17 passed)
@@ -98,8 +102,11 @@ python -m pytest tests/ -v
 # Run frontend Vitest tests (8 passed)
 npm test
 
-# Run deterministic LCA benchmark harness
+# Run deterministic LCA benchmark harness (30 cases, 3.15% MAPE)
 node eval/run_eval.js
+
+# Run downstream ToolGrad held-out evaluation
+python eval/downstream_tool_eval.py
 ```
 
 ---
