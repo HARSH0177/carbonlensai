@@ -73,7 +73,9 @@ const pairwiseAccuracy = totalPairs > 0 ? parseFloat(((concordantPairs / totalPa
 
 console.log('--------------------------------------------------');
 console.log(`Evaluated Cases       : ${n}`);
+console.log(`Sum of Abs Error (kg) : ${parseFloat(totalAbsError.toFixed(4))} kg`);
 console.log(`MAE (kg CO2e)         : ${mae}`);
+console.log(`Sum of Abs % Error    : ${parseFloat(totalAbsPctError.toFixed(2))}%`);
 console.log(`MAPE (%)              : ${mape}%`);
 console.log(`Grade Accuracy (%)    : ${gradeAccuracy}% (${correctGrades}/${n})`);
 console.log(`Pairwise Ranking Acc  : ${pairwiseAccuracy}% (${concordantPairs}/${totalPairs})`);
