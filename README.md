@@ -23,6 +23,60 @@
 
 ---
 
+## 🏗️ System Architecture & Agentic LCA Pipeline
+
+<div align="center">
+  <img src="assets/architecture-diagram.svg" alt="CarbonLensAI System Architecture Diagram" width="100%" />
+</div>
+
+<br/>
+
+### 📐 Architectural Layer Breakdown
+
+The architecture diagram above illustrates CarbonLensAI's 4-layer asynchronous data processing and optimization pipeline:
+
+1. **Layer 1 — Perception & Multimodal Ingestion Layer**:
+   - **Gemini 2.5 Flash Vision**: Parses food items, preparation methods, and mass estimates ($g$) from meal photos and grocery receipts.
+   - **Perception-Math Decoupler**: Enforces a strict architectural barrier preventing LLM probabilistic hallucinations from contaminating environmental calculations.
+   - **Resilience Circuit Breaker**: Half-open state machine with 3-failure trip threshold and automated reset, maintaining 100% operational client uptime.
+   - **Graceful Category Fallback**: Deterministic fallback to category baseline averages when upstream networks or OCR services fail.
+
+2. **Layer 2 — ToolGrad Agentic Synthesis & Optimization Layer (ACL 2026)**:
+   - **Forward Tool Execution Graph**: Chains multi-step LCA calculations (`calculate_recipe_lca` $\to$ `find_low_carbon_swap` $\to$ `estimate_preparation_impact` $\to$ `compute_mac_abatement_cost`).
+   - **Textual Gradient Critic ($\nabla_{\text{text}}$)**: Directional critique evaluating unit scaling, strict category boundaries, and nutritional protein preservation.
+   - **Closed-Loop Gradient Conditioning**: Injects cumulative gradients into the Action Proposer prompt to dynamically guide the next tool selection.
+   - **Answer-First Inverted Synthesizer**: Generates grounded backward queries and verified assistant responses from completed execution traces.
+   - **LoRA SFT Pipeline ([`toolgrad/train_sft_lora.py`](toolgrad/train_sft_lora.py))**: Formats trajectories into ChatML format for parameter-efficient fine-tuning on consumer/cluster GPUs (Gemma 2B / 3B).
+
+3. **Layer 3 — Deterministic Life Cycle Assessment (LCA) Engine**:
+   - **4-Tier Item Matching Engine**: Resolves items via exact matching, token-boundary regex, and category scoping (`grocery` vs `meal`), preventing substring collisions (e.g. `Dal Rice` meal vs `Dal` grocery).
+   - **Verified LCA Database**: Curated from Poore & Nemecek 2018 (*Science*), Agribalyse 3.1.1, and ICMR India, verified across 30 benchmark cases (**3.15% MAPE, 0.04 kg MAE**).
+   - **Thermodynamic Cooking Energy Engine**: Combines Frankowska et al. 2020 burner power ratings with Central Electricity Authority (CEA) India v19 grid emission factors (**0.716 kg $\text{CO}_2\text{e}$/kWh**).
+   - **Marginal Abatement Cost (MAC)**: Computes economic-carbon efficiency ($\Delta \text{Cost} / \Delta \text{CO}_2\text{e}$ in ₹/kg $\text{CO}_2\text{e}$) to suggest cost-effective swaps.
+
+4. **Layer 4 — Interactive Client, Automated CI & 2050 Climate Futures Layer**:
+   - **React 19 & Vite SPA**: Glassmorphic, WCAG-compliant UI with real-time portion adjustment sliders and emission grade badges (A+ to G).
+   - **Dynamic 2050 Climate Simulator**: Generates personalized urban climate projections and "Letter from 2050" scenarios based on consumer diet trajectories.
+   - **GitHub Actions Automated CI**: Runs automated multi-job testing (18 Pytest unit tests, 8 Vitest reactivity tests, and 30-case LCA ground-truth audit) on every push.
+
+### 🧩 Core Subsystems & Components
+
+| Subsystem / Component | Primary Responsibilities | Core Technology |
+| :--- | :--- | :--- |
+| **Multimodal Vision & Decoupler** | Receipt OCR, food portion perception, and arithmetic decoupling | Gemini 2.5 Flash Vision, Strict Portion Schema |
+| **Resilience Circuit Breaker** | 3-failure threshold, half-open recovery, and deterministic fallback | Custom State Machine, Category Baselines |
+| **ToolGrad Synthesizer** | Closed-loop trajectory generation with accumulated textual gradients | ACL 2026 Framework, Multi-Model Fallback Chain |
+| **Textual Gradient Critic** | Directional constraint evaluation (category isolation & protein preservation) | Gemini 2.5, Gradient Feedback Loop |
+| **LoRA SFT Pipeline** | ChatML trajectory tokenization and lightweight parameter fine-tuning | PyTorch, Hugging Face PEFT, LoRA |
+| **4-Tier Item Matching Engine** | Token-boundary regex & category scoping to eliminate collisions | Python `re`, Deterministic 4-Tier Lookup |
+| **Verified LCA Engine** | Zero-hallucination carbon calculations & unit-standardized scaling | Poore & Nemecek 2018, Agribalyse 3.1.1, ICMR |
+| **Thermodynamic Energy Engine** | Additive cooking preparation overhead using regional grid averages | Frankowska 2020, CEA India v19 (0.716 kg/kWh) |
+| **Marginal Abatement Cost** | Cost-per-kg $\text{CO}_2\text{e}$ averted to identify high-ROI dietary swaps | Microeconomic Abatement Optimization |
+| **Interactive Client & Simulator** | Glassmorphic UI, portion sliders, and generative 2050 climate futures | React 19, Vite, Tailwind CSS, Lucide |
+| **Automated CI/CD** | Dual-environment automated test validation on every push | GitHub Actions, Pytest 8, Vitest 2 |
+
+---
+
 ## 🧪 1. Deterministic Evaluation Harness & LCA Ground-Truth Benchmark
 
 Multimodal vision models (VLMs) have high variance when estimating portion masses from 2D images (~25–35%). When LLMs perform environmental arithmetic directly, perception errors compound with arithmetic hallucination. 

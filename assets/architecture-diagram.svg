@@ -1,0 +1,242 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 720" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="mainBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBFDFB" />
+      <stop offset="100%" stop-color="#F4F8F5" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="boxShadow" x="-4%" y="-6%" width="108%" height="116%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#14281E" flood-opacity="0.05" />
+    </filter>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#4A6555" />
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#7C3AED" />
+    </marker>
+  </defs>
+
+  <style>
+    .header-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 21px; fill: #0D2818; }
+    .header-sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 500; font-size: 12.5px; fill: #3D5A47; }
+    .layer-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .card-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 700; font-size: 12.5px; }
+    .card-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 400; font-size: 11px; fill: #475569; }
+    .badge { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 600; font-size: 10px; }
+  </style>
+
+  <!-- Main Background Container -->
+  <rect width="1120" height="720" rx="16" fill="url(#mainBg)" stroke="#D8E8DD" stroke-width="1.5" />
+
+  <!-- Header Section -->
+  <g transform="translate(35, 22)">
+    <text x="0" y="20" class="header-title">CarbonLensAI — System Architecture &amp; Agentic LCA Pipeline</text>
+    <text x="0" y="38" class="header-sub">Decoupled multimodal perception, deterministic Life Cycle Assessment (LCA), and ToolGrad inverted agentic synthesis (ACL 2026)</text>
+  </g>
+
+  <!-- ==========================================
+       LAYER 1: Perception & Multimodal Ingestion Layer
+       ========================================== -->
+  <g transform="translate(35, 75)">
+    <rect width="1050" height="96" rx="12" fill="#F0F7FD" stroke="#CBE2F8" stroke-width="1" filter="url(#boxShadow)" />
+    <text x="18" y="22" class="layer-title" fill="#0D47A1">1. Perception &amp; Multimodal Ingestion Layer</text>
+
+    <!-- Card 1: Gemini Flash Vision -->
+    <g transform="translate(18, 32)">
+      <rect width="245" height="52" rx="8" fill="#FFFFFF" stroke="#BBDEFB" stroke-width="1" />
+      <text x="12" y="20" class="card-title" fill="#0D47A1">Gemini 2.5 Flash Vision</text>
+      <text x="12" y="38" class="card-body">&#x2022; Receipt OCR &amp; Food Plate Perception</text>
+    </g>
+
+    <!-- Card 2: Perception-Calculation Decoupler -->
+    <g transform="translate(275, 32)">
+      <rect width="255" height="52" rx="8" fill="#FFFFFF" stroke="#BBDEFB" stroke-width="1" />
+      <text x="12" y="20" class="card-title" fill="#0D47A1">Perception-Math Decoupler</text>
+      <text x="12" y="38" class="card-body">&#x2022; Strips LLM Arithmetic Hallucination</text>
+    </g>
+
+    <!-- Card 3: Resilience Circuit Breaker -->
+    <g transform="translate(542, 32)">
+      <rect width="245" height="52" rx="8" fill="#FFFFFF" stroke="#BBDEFB" stroke-width="1" />
+      <text x="12" y="20" class="card-title" fill="#0D47A1">Resilience Circuit Breaker</text>
+      <text x="12" y="38" class="card-body">&#x2022; Half-Open State Machine (100% Uptime)</text>
+    </g>
+
+    <!-- Card 4: Graceful Category Fallback -->
+    <g transform="translate(799, 32)">
+      <rect width="233" height="52" rx="8" fill="#FFFFFF" stroke="#BBDEFB" stroke-width="1" />
+      <text x="12" y="20" class="card-title" fill="#0D47A1">Graceful Category Fallback</text>
+      <text x="12" y="38" class="card-body">&#x2022; Deterministic Category Baseline Means</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector: Layer 1 to Layer 2 -->
+  <path d="M 560 171 L 560 192" stroke="#78909C" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)" />
+
+  <!-- ==========================================
+       LAYER 2: ToolGrad Agentic Synthesis & Optimization Layer
+       ========================================== -->
+  <g transform="translate(35, 192)">
+    <rect width="1050" height="152" rx="12" fill="#F8F3FE" stroke="#DEC8F9" stroke-width="1" filter="url(#boxShadow)" />
+    <text x="18" y="22" class="layer-title" fill="#5E249F">2. ToolGrad Agentic Synthesis &amp; Textual Gradient Layer (ACL 2026)</text>
+
+    <!-- Module 1: Forward Tool Execution -->
+    <g transform="translate(18, 36)">
+      <rect width="195" height="102" rx="8" fill="#FFFFFF" stroke="#D1B3F7" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#5E249F">Forward Tool Exec</text>
+      <text x="12" y="38" class="card-body">&#x2022; calculate_recipe_lca</text>
+      <text x="12" y="54" class="card-body">&#x2022; find_low_carbon_swap</text>
+      <text x="12" y="70" class="card-body">&#x2022; estimate_prep_impact</text>
+      <text x="12" y="86" class="card-body">&#x2022; compute_mac_cost</text>
+    </g>
+
+    <!-- Flow within ToolGrad -->
+    <path d="M 213 87 L 226 87" stroke="#9333EA" stroke-width="1.5" marker-end="url(#arrowPurple)" />
+
+    <!-- Module 2: Textual Gradient Critic -->
+    <g transform="translate(228, 36)">
+      <rect width="195" height="102" rx="8" fill="#FFFFFF" stroke="#D1B3F7" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#5E249F">Gradient Critic (&#8711;Text)</text>
+      <text x="12" y="38" class="card-body">&#x2022; Evaluates constraints</text>
+      <text x="12" y="54" class="card-body">&#x2022; Category isolation check</text>
+      <text x="12" y="70" class="card-body">&#x2022; Protein preservation check</text>
+      <text x="12" y="86" class="card-body">&#x2022; Directional error signals</text>
+    </g>
+
+    <!-- Flow within ToolGrad -->
+    <path d="M 423 87 L 436 87" stroke="#9333EA" stroke-width="1.5" marker-end="url(#arrowPurple)" />
+
+    <!-- Module 3: Closed-Loop Conditioning -->
+    <g transform="translate(438, 36)">
+      <rect width="195" height="102" rx="8" fill="#FAF5FF" stroke="#C084FC" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#6B21A8">Closed-Loop Loop</text>
+      <text x="12" y="38" class="card-body">&#x2022; Injects &#8711; into Proposer</text>
+      <text x="12" y="54" class="card-body">&#x2022; Critical guidance banner</text>
+      <text x="12" y="70" class="card-body">&#x2022; Dynamic backtracking</text>
+      <text x="12" y="86" class="card-body">&#x2022; Prevents dead-end paths</text>
+    </g>
+
+    <!-- Flow within ToolGrad -->
+    <path d="M 633 87 L 646 87" stroke="#9333EA" stroke-width="1.5" marker-end="url(#arrowPurple)" />
+
+    <!-- Module 4: Inverted Query Synthesizer -->
+    <g transform="translate(648, 36)">
+      <rect width="190" height="102" rx="8" fill="#FFFFFF" stroke="#D1B3F7" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#5E249F">Inverted Synthesizer</text>
+      <text x="12" y="38" class="card-body">&#x2022; Answer-First paradigm</text>
+      <text x="12" y="54" class="card-body">&#x2022; Backward query synthesis</text>
+      <text x="12" y="70" class="card-body">&#x2022; Grounded agent reply</text>
+      <text x="12" y="86" class="card-body">&#x2022; Multi-scenario dataset</text>
+    </g>
+
+    <!-- Flow within ToolGrad -->
+    <path d="M 838 87 L 851 87" stroke="#9333EA" stroke-width="1.5" marker-end="url(#arrowPurple)" />
+
+    <!-- Module 5: LoRA Fine-Tuning Pipeline -->
+    <g transform="translate(853, 36)">
+      <rect width="179" height="102" rx="8" fill="#FFFFFF" stroke="#D1B3F7" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#5E249F">LoRA SFT Pipeline</text>
+      <text x="12" y="38" class="card-body">&#x2022; train_sft_lora.py</text>
+      <text x="12" y="54" class="card-body">&#x2022; ChatML Tokenizer map</text>
+      <text x="12" y="70" class="card-body">&#x2022; Target: Gemma 2B / 3B</text>
+      <text x="12" y="86" class="card-body">&#x2022; r=16, alpha=32, bf16</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector: Layer 2 to Layer 3 -->
+  <path d="M 560 344 L 560 365" stroke="#78909C" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)" />
+
+  <!-- ==========================================
+       LAYER 3: Deterministic Life Cycle Assessment (LCA) Engine
+       ========================================== -->
+  <g transform="translate(35, 365)">
+    <rect width="1050" height="152" rx="12" fill="#EBF8F1" stroke="#B8E6CB" stroke-width="1" filter="url(#boxShadow)" />
+    <text x="18" y="22" class="layer-title" fill="#135E33">3. Deterministic Life Cycle Assessment (LCA) Engine</text>
+
+    <!-- Card 1: 4-Tier Matching Engine -->
+    <g transform="translate(18, 36)">
+      <rect width="245" height="102" rx="8" fill="#FFFFFF" stroke="#A4DCBC" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#135E33">4-Tier Exact Matcher</text>
+      <text x="12" y="38" class="card-body">&#x2022; Tier 1: Exact case-insensitive</text>
+      <text x="12" y="54" class="card-body">&#x2022; Tier 2: Word-boundary regex</text>
+      <text x="12" y="70" class="card-body">&#x2022; Tier 3: Category-scoped match</text>
+      <text x="12" y="86" class="card-body">&#x2022; Eliminates substring collisions</text>
+    </g>
+
+    <!-- Card 2: Ground-Truth LCA Database -->
+    <g transform="translate(275, 36)">
+      <rect width="250" height="102" rx="8" fill="#FFFFFF" stroke="#A4DCBC" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#135E33">Verified LCA Factors</text>
+      <text x="12" y="38" class="card-body">&#x2022; Poore &amp; Nemecek 2018 (Science)</text>
+      <text x="12" y="54" class="card-body">&#x2022; Agribalyse 3.1.1 + ICMR India</text>
+      <text x="12" y="70" class="card-body">&#x2022; 30-case benchmark (eval/testset.json)</text>
+      <text x="12" y="86" class="card-body">&#x2022; 3.15% MAPE | 0.04 kg MAE</text>
+    </g>
+
+    <!-- Card 3: Thermodynamic Energy Engine -->
+    <g transform="translate(537, 36)">
+      <rect width="250" height="102" rx="8" fill="#FFFFFF" stroke="#A4DCBC" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#135E33">Thermodynamic Energy</text>
+      <text x="12" y="38" class="card-body">&#x2022; Frankowska 2020 burner draws</text>
+      <text x="12" y="54" class="card-body">&#x2022; CEA India v19 grid: 0.716 kg/kWh</text>
+      <text x="12" y="70" class="card-body">&#x2022; Cooking method overheads</text>
+      <text x="12" y="86" class="card-body">&#x2022; Additive preparation impact</text>
+    </g>
+
+    <!-- Card 4: Marginal Abatement Cost (MAC) -->
+    <g transform="translate(799, 36)">
+      <rect width="233" height="102" rx="8" fill="#FFFFFF" stroke="#A4DCBC" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#135E33">MAC Economic Engine</text>
+      <text x="12" y="38" class="card-body">&#x2022; &#916;Cost / &#916;CO2e in &#8377;/kg CO2e</text>
+      <text x="12" y="54" class="card-body">&#x2022; Strict protein isolation pool</text>
+      <text x="12" y="70" class="card-body">&#x2022; Pairwise ranking: 99.1%</text>
+      <text x="12" y="86" class="card-body">&#x2022; Actionable consumer savings</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector: Layer 3 to Layer 4 -->
+  <path d="M 560 517 L 560 538" stroke="#78909C" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)" />
+
+  <!-- ==========================================
+       LAYER 4: Interactive Client & Automated CI Layer
+       ========================================== -->
+  <g transform="translate(35, 538)">
+    <rect width="1050" height="152" rx="12" fill="#FFFBF2" stroke="#FDE3BD" stroke-width="1" filter="url(#boxShadow)" />
+    <text x="18" y="22" class="layer-title" fill="#B25900">4. Interactive Client, Automated CI &amp; 2050 Climate Simulator</text>
+
+    <!-- Card 1: React 19 UI -->
+    <g transform="translate(18, 36)">
+      <rect width="335" height="102" rx="8" fill="#FFFFFF" stroke="#FCD69F" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#B25900">React 19 &amp; Vite SPA</text>
+      <text x="12" y="38" class="card-body">&#x2022; Glassmorphic WCAG-compliant design</text>
+      <text x="12" y="54" class="card-body">&#x2022; Responsive portion adjustment sliders</text>
+      <text x="12" y="70" class="card-body">&#x2022; Real-time emission tier badges (A+ to G)</text>
+      <text x="12" y="86" class="card-body">&#x2022; PromptWars Challenge 3 Score: 90.14/100</text>
+    </g>
+
+    <!-- Card 2: 2050 Climate Simulator -->
+    <g transform="translate(365, 36)">
+      <rect width="335" height="102" rx="8" fill="#FFFFFF" stroke="#FCD69F" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#B25900">Dynamic 2050 Climate Simulator</text>
+      <text x="12" y="38" class="card-body">&#x2022; Urban climate futures projection engine</text>
+      <text x="12" y="54" class="card-body">&#x2022; Generative visual scenarios based on diet</text>
+      <text x="12" y="70" class="card-body">&#x2022; Heat anomaly &amp; flood vulnerability metrics</text>
+      <text x="12" y="86" class="card-body">&#x2022; "Letter from 2050" personalized narrative</text>
+    </g>
+
+    <!-- Card 3: Automated GitHub Actions CI -->
+    <g transform="translate(712, 36)">
+      <rect width="320" height="102" rx="8" fill="#FFFFFF" stroke="#FCD69F" stroke-width="1.2" />
+      <text x="12" y="20" class="card-title" fill="#B25900">GitHub Actions Automated CI</text>
+      <text x="12" y="38" class="card-body">&#x2022; Python 3.11: 18 Pytest unit tests (100% pass)</text>
+      <text x="12" y="54" class="card-body">&#x2022; Node 20: 8 Vitest unit tests (100% pass)</text>
+      <text x="12" y="70" class="card-body">&#x2022; 30-case LCA ground-truth audit harness</text>
+      <text x="12" y="86" class="card-body">&#x2022; Continuous build verification on every push</text>
+    </g>
+  </g>
+
+</svg>
