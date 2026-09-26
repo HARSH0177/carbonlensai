@@ -14,18 +14,31 @@ import requests
 from typing import Dict, List, Any, Optional
 from .tools import SustainabilityToolKit
 
+DEFAULT_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash",
+    "gemini-flash-latest"
+]
+
 class ToolGradSynthesizer:
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-3.5-flash-lite"):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required.")
-        self.model = model
-        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        self.model = model or DEFAULT_MODELS[0]
+        self.model_chain = [self.model] + [m for m in DEFAULT_MODELS if m != self.model]
+        self.current_model_idx = 0
         self.toolkit = SustainabilityToolKit()
         self.tool_definitions = self.toolkit.get_tool_definitions()
 
+    @property
+    def api_url(self) -> str:
+        active_model = self.model_chain[self.current_model_idx]
+        return f"https://generativelanguage.googleapis.com/v1beta/models/{active_model}:generateContent?key={self.api_key}"
+
     def _call_gemini(self, prompt: str, temperature: float = 0.7, json_mode: bool = False, max_retries: int = 5) -> str:
-        """Helper to invoke Gemini REST API with clean retry and backoff."""
+        """Helper to invoke Gemini REST API with clean retry, backoff, and model fallback."""
         import time
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
@@ -52,9 +65,20 @@ class ToolGradSynthesizer:
                     time.sleep(wait_sec)
                     last_err = f"HTTP 429 Rate Limit (attempt {attempt}/{max_retries})"
                     continue
-                elif response.status_code in [500, 503]:
+                elif response.status_code in [404, 503]:
+                    # Model not found or high demand: failover to next model in chain
+                    if self.current_model_idx + 1 < len(self.model_chain):
+                        self.current_model_idx += 1
+                        print(f"    [Failover] Switching model to fallback: {self.model_chain[self.current_model_idx]}", flush=True)
+                        time.sleep(2)
+                        continue
+                    else:
+                        time.sleep(4 * attempt)
+                        last_err = f"HTTP {response.status_code} ({self.model_chain[self.current_model_idx]})"
+                        continue
+                elif response.status_code == 500:
                     time.sleep(4 * attempt)
-                    last_err = f"HTTP {response.status_code} Server Error"
+                    last_err = f"HTTP 500 Server Error"
                     continue
                 else:
                     raise RuntimeError(f"Gemini API error ({response.status_code}): {response.text[:200]}")
@@ -100,31 +124,61 @@ class ToolGradSynthesizer:
             except Exception as e:
                 raise ValueError(f"Could not parse valid JSON from text: {clean[:200]}") from e
 
-    def propose_next_tool(self, current_trace: List[Dict[str, Any]], scenario_goal: str) -> Dict[str, Any]:
+    def propose_next_tool(self, current_trace: List[Dict[str, Any]], gradients: List[Dict[str, Any]], scenario_goal: str) -> Dict[str, Any]:
         """
-        ToolGrad Proposer:
-        Examines the current execution trace and proposes the next logical tool call to advance the scenario.
+        ToolGrad Proposer (Gradient-Conditioned):
+        Examines the current execution trace paired with accumulated Textual Gradients (critic feedback)
+        and proposes the next logical tool call to advance the scenario.
         """
         tools_summary = json.dumps(self.tool_definitions, indent=2)
-        trace_summary = json.dumps(current_trace, indent=2) if current_trace else "No tools called yet (Step 1)."
+
+        # Build annotated history pairing each execution step with its computed textual gradient
+        history_blocks = []
+        for i, step in enumerate(current_trace):
+            g_text = gradients[i]["gradient"] if i < len(gradients) else "Pending evaluation."
+            history_blocks.append(
+                f"--- Step {step.get('step', i+1)} ---\n"
+                f"Tool Called : {step.get('tool')}\n"
+                f"Arguments   : {json.dumps(step.get('arguments'))}\n"
+                f"Output      : {json.dumps(step.get('execution_result'))}\n"
+                f"Textual Gradient (Critic Feedback):\n{g_text}\n"
+            )
+        trace_summary = "\n".join(history_blocks) if history_blocks else "No tools called yet (Step 1 - Initialization)."
+
+        # Highlight the most recent gradient as active directional vector
+        latest_gradient_block = ""
+        if gradients:
+            last_grad = gradients[-1].get("gradient", "")
+            last_tool = gradients[-1].get("tool", "")
+            latest_gradient_block = f"""
+CRITICAL DIRECTIONAL GUIDANCE (LATEST TEXTUAL GRADIENT FROM STEP {len(gradients)} '{last_tool}'):
+"{last_grad}"
+
+MANDATORY GRADIENT CONDITIONING:
+1. Review the Textual Gradient above carefully. It acts as directional feedback on constraint satisfaction, physical consistency, and culinary validity.
+2. If the gradient identifies an issue (e.g. missing protein substitution, culinary precision gap, improper portioning, or unnecessary tools), your proposed action MUST directly address and satisfy that directional recommendation.
+3. Advance the analysis toward completing the scenario goal while adhering to physical and thermodynamic constraints.
+"""
 
         prompt = f"""You are the ToolGrad Action Proposer for environmental life-cycle assessment.
 Scenario Goal: {scenario_goal}
 
-Current Tool Execution Trace:
+Execution History with Evaluator Textual Gradients:
 {trace_summary}
-
+{latest_gradient_block}
 Available Tool Catalog:
 {tools_summary}
 
 CRITICAL INSTRUCTIONS:
 - Propose the next logical tool call and concrete parameters to make progress toward the goal.
 - Use realistic culinary and consumer quantities (e.g. 150g-300g per portion).
+- Condition your tool and parameter selection on the Textual Gradient feedback provided above.
 - If the workflow has achieved a complete, multi-step analysis (e.g., Recipe LCA -> Hotspot Identification -> Swap -> Preparation / Abatement Cost), you may set "terminate": true.
 
 Respond STRICTLY with a valid JSON object matching this schema:
 {{
   "terminate": false,
+  "reasoning_from_gradient": "1 sentence explaining how this action responds to the previous textual gradient",
   "tool_name": "lookup_emission_factor|calculate_recipe_lca|find_low_carbon_swap|estimate_preparation_impact|compute_mac_abatement_cost",
   "arguments": {{ ... }}
 }}"""
@@ -198,15 +252,18 @@ Respond STRICTLY with a JSON object:
         gradients = []
 
         for step in range(1, max_steps + 1):
-            print(f"  [ToolGrad] Step {step}/{max_steps}: Proposing next action...", flush=True)
-            proposal = self.propose_next_tool(trace, seed_scenario)
+            print(f"  [ToolGrad] Step {step}/{max_steps}: Proposing next action (conditioned on {len(gradients)} textual gradients)...", flush=True)
+            proposal = self.propose_next_tool(trace, gradients, seed_scenario)
             if proposal.get("terminate") and len(trace) >= 2:
                 print(f"  [ToolGrad] Proposer initiated termination after {len(trace)} validated steps.", flush=True)
                 break
 
             tool_name = proposal.get("tool_name")
             args = proposal.get("arguments", {})
+            grad_reasoning = proposal.get("reasoning_from_gradient", "")
             print(f"  [ToolGrad] Step {step}/{max_steps}: Executing '{tool_name}' against LCA table...", flush=True)
+            if grad_reasoning:
+                print(f"    [Gradient Guidance]: {grad_reasoning[:100]}...", flush=True)
 
             # Execute deterministically against real LCA toolkit
             exec_output = self.toolkit.execute(tool_name, args)
@@ -224,7 +281,8 @@ Respond STRICTLY with a JSON object:
                 "step": step,
                 "tool": tool_name,
                 "arguments": args,
-                "execution_result": exec_output
+                "execution_result": exec_output,
+                "gradient_reasoning": grad_reasoning
             })
 
         # Synthesize backward user query and grounded answer

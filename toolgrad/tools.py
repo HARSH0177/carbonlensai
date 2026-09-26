@@ -114,18 +114,36 @@ class SustainabilityToolKit:
         except Exception as e:
             return {"status": "error", "message": f"Execution error in {tool_name}: {str(e)}"}
 
-    def _tool_lookup_emission_factor(self, item_name: str, grams: float) -> Dict[str, Any]:
+    def _tool_lookup_emission_factor(self, item_name: str, grams: float, category_hint: Optional[str] = None) -> Dict[str, Any]:
         clean_name = item_name.strip().lower()
-        
-        # Priority 1: Match grocery / raw ingredient entries first to avoid colliding with composite meals
-        groceries = [f for f in self.factors if f.get("category") == "grocery"]
-        match = next((f for f in groceries if clean_name in f["name"].lower() or f["name"].lower() in clean_name), None)
+        import re
+        pattern = r'\b' + re.escape(clean_name) + r'\b'
 
-        # Priority 2: Full search if not found in groceries
+        # Priority 1: Exact factor name match across catalog
+        match = next((f for f in self.factors if f["name"].lower() == clean_name), None)
+
+        # Priority 2: If category_hint specified, prioritize that category
+        if not match and category_hint:
+            hint_factors = [f for f in self.factors if f.get("category") == category_hint]
+            match = next((f for f in hint_factors if re.search(pattern, f["name"].lower())), None)
+            if not match:
+                match = next((f for f in hint_factors if clean_name in f["name"].lower()), None)
+
+        # Priority 3: Prioritize grocery (raw ingredient) over composite meals for ambiguous culinary names
         if not match:
-            match = next((f for f in self.factors if clean_name in f["name"].lower() or f["name"].lower() in clean_name), None)
+            groceries = [f for f in self.factors if f.get("category") == "grocery"]
+            match = next((f for f in groceries if re.search(pattern, f["name"].lower())), None)
+            if not match:
+                match = next((f for f in groceries if clean_name in f["name"].lower()), None)
 
-        # Priority 3: Tag match
+        # Priority 4: Search remaining non-grocery items
+        if not match:
+            non_groceries = [f for f in self.factors if f.get("category") != "grocery"]
+            match = next((f for f in non_groceries if re.search(pattern, f["name"].lower())), None)
+            if not match:
+                match = next((f for f in non_groceries if clean_name in f["name"].lower()), None)
+
+        # Priority 5: Tag match
         if not match:
             for f in self.factors:
                 if any(tag in clean_name for tag in f.get("tags", [])):
@@ -136,7 +154,7 @@ class SustainabilityToolKit:
             factor_kg = 1.2
             matched_name = f"{item_name} (baseline)"
             grade = "B"
-            category = "grocery"
+            category = category_hint or "grocery"
         else:
             factor_kg = match["co2eKg"]
             matched_name = match["name"]
@@ -170,7 +188,8 @@ class SustainabilityToolKit:
         max_item_co2 = -1.0
 
         for ing in ingredients:
-            res = self._tool_lookup_emission_factor(ing["name"], float(ing.get("grams", 100)))
+            # Ingredients in a recipe are raw food ingredients -> category_hint="grocery"
+            res = self._tool_lookup_emission_factor(ing["name"], float(ing.get("grams", 100)), category_hint="grocery")
             co2 = res["co2e_kg"]
             total_co2 += co2
             breakdown.append({
@@ -199,17 +218,29 @@ class SustainabilityToolKit:
         item_lower = current_item.lower()
         is_protein = any(k in item_lower for k in ["chicken", "mutton", "fish", "meat", "pork", "beef", "egg", "protein"])
 
-        # Filter out non-food and seasonings (e.g. Salt, spices)
+        # Determine structural category of current item (grocery ingredient vs. composite meal)
+        lookup = self._tool_lookup_emission_factor(current_item, 100)
+        source_category = lookup.get("category", "grocery")
+
+        # Category resolution: grocery ingredients must swap for grocery ingredients; meals swap for meals
+        if category in ["grocery", "meal", "energy", "transport", "shopping", "beverage", "snack"]:
+            resolved_category = category
+        elif source_category in ["grocery", "meal"]:
+            resolved_category = source_category
+        else:
+            resolved_category = "grocery"
+
+        # Filter candidates strictly within the resolved category, excluding seasonings
         valid_pool = [
             f for f in self.factors 
-            if "seasoning" not in f.get("tags", []) and f.get("category") in ["grocery", "meal"]
+            if "seasoning" not in f.get("tags", []) and f.get("category") == resolved_category
         ]
 
         if is_protein:
             # Prioritize realistic plant-based or lower-emission protein alternatives
             protein_candidates = [
                 f for f in valid_pool
-                if any(p in f["name"].lower() for p in ["dal", "pulses", "beans", "paneer", "tofu", "egg", "chana"])
+                if any(p in f["name"].lower() for p in ["dal", "pulses", "beans", "paneer", "tofu", "egg", "chana", "lentil"])
                 and f.get("co2eKg", 99) < target_max_co2e
             ]
             candidates = protein_candidates if protein_candidates else [
@@ -218,19 +249,18 @@ class SustainabilityToolKit:
         else:
             candidates = [
                 f for f in valid_pool 
-                if (f.get("category") == category or category == "all") and f.get("co2eKg", 99) < target_max_co2e
+                if f.get("co2eKg", 99) < target_max_co2e
             ]
-            if not candidates:
-                candidates = [f for f in valid_pool if f.get("co2eKg", 99) < target_max_co2e]
 
         if not candidates:
-            return {"status": "not_found", "message": f"No lower-carbon swap found under {target_max_co2e} kg"}
+            return {"status": "not_found", "message": f"No lower-carbon swap found in '{resolved_category}' under {target_max_co2e} kg"}
 
         # Select the best emissions candidate from valid culinary alternatives
         best = min(candidates, key=lambda x: x["co2eKg"])
         return {
             "status": "success",
             "current_item": current_item,
+            "target_category": resolved_category,
             "suggested_swap": best["name"],
             "swap_co2e_per_kg": best["co2eKg"],
             "reduction_potential_pct": round(((target_max_co2e - best["co2eKg"]) / target_max_co2e) * 100, 1) if target_max_co2e > best["co2eKg"] else 35.0,
@@ -280,5 +310,6 @@ class SustainabilityToolKit:
             "price_delta_inr": price_delta_inr,
             "co2e_reduction_kg": co2e_reduction_kg,
             "mac_inr_per_kg_co2e": mac_inr_per_kg,
+            "is_financially_beneficial": price_delta_inr <= 0,
             "economic_viability": "Cost Saving" if price_delta_inr <= 0 else ("Highly Viable (<₹50/kg)" if mac_inr_per_kg < 50 else "Moderate Premium")
         }

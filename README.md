@@ -1,28 +1,110 @@
 <div align="center">
 
 # 🍃 CarbonLensAI
-### **Computer Vision Carbon Scanner & Dynamic 2050 Climate Future Simulator**
-*Google for Developers PromptWars Virtual (Challenge 3 Verified Solution Submission · Cert ID: 2026H2S06PWVCHL3-A01765)*
+### **Deterministic Life Cycle Assessment (LCA) Engine & Agentic Tool-Use Synthesis**
+*Multimodal Carbon Scanner, ToolGrad Synthesis (ACL 2026), and PromptWars Virtual Challenge 3 Verified Solution (`2026H2S06PWVCHL3-A01765`)*
 
-[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-Flash_Vision-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![Pollinations AI](https://img.shields.io/badge/Pollinations_AI-Real--Time_Generative-10B981?style=for-the-badge)](https://pollinations.ai/)
-[![Firebase](https://img.shields.io/badge/Firebase-Hosting-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-25_Passed_(Vitest_+_Pytest)-success?style=for-the-badge)](tests/)
+[![Evaluation](https://img.shields.io/badge/LCA_MAPE-8.95%25_(10_Cases)-blue?style=for-the-badge)](eval/results.md)
+[![Concordance](https://img.shields.io/badge/Pairwise_Concordance-97.8%25-green?style=for-the-badge)](eval/results.md)
+[![PromptWars](https://img.shields.io/badge/PromptWars_Score-90.14%2F100-orange?style=for-the-badge)](assets/promptwars_certificate.png)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 <br>
 
 ```text
-"Transforming abstract carbon accounting into visceral, visual feedback:
- from instant receipt/meal computer vision scans to dynamic 2050 urban projections."
+"Decoupling visual portion perception from deterministic Life Cycle Assessment:
+ verifiable carbon arithmetic, inverted agentic trajectory synthesis with textual gradients,
+ and dynamic 2050 urban climate simulations."
 ```
 
 </div>
 
 ---
 
-## 🎖️ Verified PromptWars Recognition & Benchmark Score
+## 🧪 1. Deterministic Evaluation Harness & LCA Ground-Truth Benchmark
+
+Multimodal vision models (VLMs) have high variance when estimating portion masses from 2D images (~25–35%). When LLMs perform environmental arithmetic directly, perception errors compound with arithmetic hallucination. 
+
+**CarbonLensAI decouples perception from calculation**: Gemini Flash Vision detects items and portions, but all carbon intensity math is resolved through a **deterministic calculation layer** validated against peer-reviewed Life Cycle Assessment (LCA) standards (Poore & Nemecek 2018 *Science*, Agribalyse 3.1.1, and Central Electricity Authority India v19).
+
+```text
+====================================================================
+CARBONLENSAI DETERMINISTIC EVALUATION AUDIT (eval/testset.json)
+====================================================================
+Total Benchmark Cases:           10 (Dietary, Grocery, and Energy)
+Mean Absolute Error (MAE):       0.67 kg CO2e
+Mean Absolute % Error (MAPE):    8.95%
+Grade Classification Accuracy:   80.0% (8/10 exact tier match)
+Pairwise Ranking Concordance:    97.8% (44/45 correct lower-carbon swap orderings)
+--------------------------------------------------------------------
+Key Tested Benchmarks:
+  • Dal Tadka with Steamed Rice:  True: 0.85 kg | Pred: 0.80 kg (Error: 5.9%)
+  • Aloo Gobi with Roti:          True: 1.10 kg | Pred: 1.10 kg (Error: 0.0%)
+  • Chicken Curry with Rice:      True: 3.40 kg | Pred: 3.20 kg (Error: 5.9%)
+  • 100 kWh Residential Grid:     True: 82.0 kg | Pred: 82.0 kg (Error: 0.0%)
+--------------------------------------------------------------------
+Documented Boundary & Failure Modes:
+  • Dairy Basket (Case 7): 32.0% underestimation due to butterfat variance.
+  • Bulk Staples (Case 8): 45.7% divergence from ungrounded volume scaling.
+====================================================================
+```
+
+> **Evaluation Scope**: This benchmark measures the **deterministic calculation layer** given verified item masses and utility inputs. End-to-end photo-to-mass portion estimation requires a physical scale ground-truth dataset and remains a documented future boundary (see [`eval/results.md`](eval/results.md)).
+
+---
+
+## 🤖 2. ToolGrad: Inverted Agentic Tool-Use Synthesis with Textual Gradients
+
+Prior synthetic tool-use frameworks (e.g. ToolBench) rely on a **Query-First** approach: generating a natural language query first, then running depth-first search (DFS) over APIs. In constrained physical domains like Life Cycle Assessment, DFS suffers from high annotation failure rates.
+
+CarbonLens implements the **ToolGrad framework** (*Zhou, Du [Google], Xu [Google] et al., Findings of ACL 2026*), which inverts this paradigm:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              TOOLGRAD ANSWER-FIRST PIPELINE                            │
+│                                                                                        │
+│   [1. FORWARD EXECUTION]      [2. TEXTUAL GRADIENT CRITIC]     [3. INVERTED SYNTHESIS] │
+│   LCA Toolkit Execution  ───► Compute dText Gradient      ───► Back-Synthesize Grounded│
+│   (Recipe LCA -> Hotspot      (Directional critique on         User Query & Verified   │
+│    -> Swap -> Energy)          fidelity & constraints)          Assistant Response     │
+│             ▲                             │                                            │
+│             └───── Gradient Conditioning ─┘                                            │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Engineering Fixes Implemented:
+1. **Closing the Gradient Loop**: Prior naive implementations computed textual gradients as passive narration. Our `ToolGradSynthesizer` explicitly injects accumulated gradients and highlights the latest critic gradient as `CRITICAL DIRECTIONAL GUIDANCE` in the Action Proposer prompt, conditioning every transition on prior constraint satisfaction.
+2. **Category Isolation & Collision Prevention**: Solved the composite-dish collision bug where substring matching erroneously matched whole meals (e.g. `Dal Rice` at 0.8 kg) as protein swaps for raw recipe ingredients (`Chicken Raw`). Swaps now enforce strict category isolation (`grocery` $\to$ `grocery`; `meal` $\to$ `meal`).
+3. **Additive Thermodynamic Energy**: Integrates Frankowska et al. (2020 *Nature Food*) burner power draws with CEA India's weighted national grid average (0.716 kg $\text{CO}_2\text{e}$/kWh).
+4. **Multi-Model Fallback Chain**: Centralized fallback list (`gemini-3.5-flash-lite` $\to$ `gemini-flash-lite-latest` $\to$ `gemini-3.5-flash`) preventing pipeline failure during API demand spikes.
+
+---
+
+## 🧪 3. Comprehensive Test Suite (25 Tests Passing)
+
+CarbonLens enforces dual-language verification across both frontend reactivity and backend LCA determinism:
+
+| Suite | Runner | Tests | Scope |
+| :--- | :--- | :---: | :--- |
+| **LCA Engine & ToolGrad** | `pytest` | **17 Passing** | Exact factor matching, category isolation, cooking thermodynamics, MAC cost, gradient injection, model failover |
+| **Frontend & Circuit Breaker** | `vitest` | **8 Passing** | Category average fallback, half-open circuit breaker, landing UI |
+| **Ground-Truth LCA Audit** | `node` | **10 Cases** | Literature MAPE (8.95%), MAE (0.67 kg), pairwise swap concordance (97.8%) |
+
+```bash
+# Run backend LCA toolkit & ToolGrad tests (17 passed)
+python -m pytest tests/ -v
+
+# Run frontend Vitest tests (8 passed)
+npm test
+
+# Run deterministic LCA benchmark harness
+node eval/run_eval.js
+```
+
+---
+
+## 🎖️ 4. Google PromptWars Virtual Recognition (Challenge 3)
 
 CarbonLensAI was developed for **PromptWars Virtual** organized by **Google for Developers & Hack2Skill (H2S)**, earning a **Certificate of Appreciation for Challenge 3** with a verified submission score of **90.14 / 100**.
 
@@ -41,14 +123,14 @@ CarbonLensAI was developed for **PromptWars Virtual** organized by **Google for 
 | **Accessibility** | **93 / 100** | WCAG compliant glassmorphic UI, semantic HTML & contrast ratios |
 | **Problem Statement Alignment**| **93 / 100** | End-to-end multimodal perception to actionable carbon reduction |
 | **Code Quality** | **84 / 100** | Modular service decoupling & clean component separation |
-| **Testing** | **73 / 100** | Vitest unit test coverage over core carbon calculation engines |
+| **Testing** | **73 / 100** | Unit test coverage over core carbon calculation engines |
 
 - **Official Certificate ID**: `2026H2S06PWVCHL3-A01765`
 - **Verification Portal**: [Hack2Skill PromptWars Dashboard](https://hack2skill.com)
 
 ---
 
-## 📸 Interface & Live Visual Demonstrations
+## 📸 5. Multimodal Web Application & 2050 Climate Futures
 
 <div align="center">
 
@@ -64,17 +146,7 @@ CarbonLensAI was developed for **PromptWars Virtual** organized by **Google for 
 
 ---
 
-## 📌 Project Overview
-
-**CarbonLensAI** is an interactive, production-ready web platform engineered to gamify personal sustainability and climate awareness. Instead of presenting abstract numbers in dry spreadsheets, CarbonLensAI leverages multimodal Generative AI to provide immediate, visual, and actionable climate feedback:
-
-1. 📸 **Computer Vision Scanner**: Snap or upload a photo of your meal, grocery receipt, or utility bill. Google Gemini Flash extracts items in real time, calculates the $\text{CO}_2\text{e}$ carbon footprint, and recommends concrete, high-impact eco-friendly swaps.
-2. 🎛️ **Dynamic 2050 Futures Engine**: Adjust interactive lifestyle sliders (Diet, Transport, Energy/AC consumption) and watch as the system generates real-time, photorealistic 2050 urban projections reflecting your collective choices.
-3. 🛡️ **Resilience Architecture & Circuit Breaker**: Stateful half-open circuit breaker with a 5-minute cooldown. When external APIs experience rate limiting or transient errors, it transitions gracefully to programmatic table averages derived from verified Life Cycle Assessment (LCA) data with explicit "Offline Estimate" UI disclosure.
-
----
-
-## 🏗️ System Architecture & Workflow
+## 🏗️ 6. System Architecture & Resilience Engine
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -91,53 +163,13 @@ CarbonLensAI was developed for **PromptWars Virtual** organized by **Google for 
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 🧪 Systematic Evaluation Harness & LCA Ground-Truth Audit
-
-To evaluate calculation accuracy against empirical standards, CarbonLensAI includes a standalone evaluation suite (`eval/run_eval.js`) benchmarking the deterministic emission factor engine against **peer-reviewed Life Cycle Assessment (LCA)** reference databases (Poore & Nemecek 2018 *Science*, Agribalyse 3.1.1, and CEA India Grid v19):
-
-> **Evaluation Scope**: This benchmark measures the accuracy of the **deterministic calculation layer** against literature ground truth given verified item masses and electricity units (achieving 8.95% MAPE and 97.8% pairwise swap concordance). End-to-end photo-to-mass perception accuracy requires a dataset of scale-weighed meals and remains a documented future boundary (see [`eval/results.md`](eval/results.md)).
-
-```text
-====================================================================
-CARBONLENSAI DETERMINISTIC EVALUATION AUDIT (eval/testset.json)
-====================================================================
-Total Benchmark Cases:           10 (Dietary, Grocery, and Energy)
-Mean Absolute Error (MAE):       0.67 kg CO2e
-Mean Absolute % Error (MAPE):    8.95%
-Grade Classification Accuracy:   80.0% (8/10 exact tier match)
-Pairwise Ranking Concordance:    97.8% (44/45 correct swap orderings)
---------------------------------------------------------------------
-Detailed Benchmark Highlights:
-  • Dal Tadka with Steamed Rice:  True: 0.85 kg | Pred: 0.80 kg (Error: 5.9%)
-  • Aloo Gobi with Roti:          True: 1.10 kg | Pred: 1.10 kg (Error: 0.0%)
-  • Chicken Curry with Rice:      True: 3.40 kg | Pred: 3.20 kg (Error: 5.9%)
-  • 100 kWh Residential Grid:     True: 82.0 kg | Pred: 82.0 kg (Error: 0.0%)
---------------------------------------------------------------------
-Known Failure Cases & Boundary:
-  • Dairy Basket (Case 7): 32.0% underestimation due to butterfat variance.
-  • Bulk Staples (Case 8): 45.7% divergence from ungrounded volume scaling.
-====================================================================
-```
-
-*Full reproducible test harness available in [`eval/run_eval.js`](eval/run_eval.js) and report in [`eval/results.md`](eval/results.md).*
-
----
-
-## 🛠️ Key Features
-
-- **Multimodal AI Brain**: Powered by Google Gemini Flash for low-latency image extraction, categorical breakdown, and carbon intensity estimates.
 - **Stateful Circuit Breaker**: Half-open state machine with 5-minute cooldown preventing cascade failures during API outages.
 - **Programmatic Fallback**: Replaced hardcoded scenarios with dynamic arithmetic means calculated across 140+ verified emission factor entries.
 - **2050 Future Simulator**: Synthesizes generative urban visual projections reflecting optimistic vs. dystopian environmental trajectories using Pollinations AI.
-- **Interactive Carbon Accounting**: Real-time breakdown of scope emission equivalents (car km driven, smartphone charges, tree-years needed for offset).
-- **Personalized Swaps**: Contextual recommendations offering lower-carbon alternatives with quantified emissions savings.
-- **Glassmorphic UI**: Built with React 18, Vite, Framer Motion, and TailwindCSS for smooth animations and accessibility (93/100 audit standard).
 
 ---
 
-## 📂 Repository Structure
+## 📂 7. Repository Structure
 
 ```text
 carbonlensai/
@@ -199,10 +231,13 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 
 ### 4. Run Unit Tests & Evaluation
 ```bash
-# Run Vitest unit tests (8 passing tests)
+# Run backend LCA toolkit & ToolGrad unit tests (17 passing tests)
+python -m pytest tests/ -v
+
+# Run frontend Vitest unit tests (8 passing tests)
 npm test
 
-# Run empirical LCA evaluation harness
+# Run empirical LCA evaluation harness (10 benchmark cases)
 node eval/run_eval.js
 ```
 
