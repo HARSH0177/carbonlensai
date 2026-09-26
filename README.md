@@ -75,6 +75,62 @@ The architecture diagram above illustrates CarbonLensAI's 4-layer asynchronous d
 | **Interactive Client & Simulator** | Glassmorphic UI, portion sliders, and generative 2050 climate futures | React 19, Vite, Tailwind CSS, Lucide |
 | **Automated CI/CD** | Dual-environment automated test validation on every push | GitHub Actions, Pytest 8, Vitest 2 |
 
+### 🔄 Multi-Agent & Decoupled Execution Sequence Diagram
+
+The sequence diagram below models the dynamic, multi-agent execution flow across multimodal perception decoupling, circuit breaking, closed-loop ToolGrad trajectory synthesis, deterministic LCA calculation, and 2050 climate forecasting:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Client
+    participant UI as React 19 Frontend
+    participant CB as Resilience Circuit Breaker
+    participant Vision as Gemini 2.5 Flash Vision
+    participant Decoupler as Perception-Math Decoupler
+    participant LCA as Deterministic LCA Engine
+    participant ToolGrad as ToolGrad Synthesizer (ACL 2026)
+    participant Critic as Textual Gradient Critic (dText)
+    participant Simulator as 2050 Climate Simulator
+
+    User->>UI: Upload Food Photo or Receipt
+    UI->>CB: Dispatch Ingestion Request
+    alt Upstream Service Available (Normal Flow)
+        CB->>Vision: Forward Image (Zero Math Requested)
+        Vision-->>CB: Return Item Candidates & Bounding Mass (g)
+        CB->>Decoupler: Strip Probabilistic LLM Carbon Values
+        Decoupler->>LCA: Transmit Verified Items & Portions (g)
+    else Upstream Rate Limit / Outage (HTTP 429 or 503)
+        CB-->>UI: Trip Breaker → Load Deterministic Category Means
+    end
+
+    LCA->>LCA: 4-Tier Match (Exact → Word Boundary → Category Scoping)
+    LCA->>LCA: Calculate Base Emissions (Poore & Nemecek / Agribalyse)
+    LCA->>LCA: Add Cooking Energy Overhead (CEA India v19: 0.716 kg/kWh)
+    LCA-->>UI: Stream Baseline LCA Footprint & Primary Hotspots
+
+    UI->>ToolGrad: Request Low-Carbon Optimization Trajectory
+    ToolGrad->>ToolGrad: Propose Next Tool (find_low_carbon_swap)
+    ToolGrad->>Critic: Forward Candidate Execution Trace
+    
+    alt Domain Constraints Satisfied (Strict Protein Isolation)
+        Critic-->>ToolGrad: Positive Gradient (Preserves Macro & Category Boundary)
+        ToolGrad->>ToolGrad: Back-Synthesize Grounded Response & Trajectory
+    else Category or Macro Collision (e.g. Starches for Meat)
+        Critic-->>ToolGrad: Directional Critique (Negative Gradient: Backtrack)
+        ToolGrad->>ToolGrad: Re-Dispatch within Isolated Protein Pool
+    end
+
+    ToolGrad->>LCA: Compute Marginal Abatement Cost (MAC in ₹/kg CO2e)
+    LCA-->>UI: Return Verified Swap & Economic Efficiency Metrics
+
+    opt User Toggles 2050 Urban Simulation
+        UI->>Simulator: Submit Net Carbon Delta & Scenario Preferences
+        Simulator-->>UI: Stream Dynamic 2050 Projection & Narrative
+    end
+
+    UI-->>User: Render Glassmorphic Carbon Cards, Sliders & Emission Tiers
+```
+
 ---
 
 ## 🧪 1. Deterministic Evaluation Harness & LCA Ground-Truth Benchmark
