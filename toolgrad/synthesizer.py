@@ -15,7 +15,7 @@ from typing import Dict, List, Any, Optional
 from .tools import SustainabilityToolKit
 
 class ToolGradSynthesizer:
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash-lite"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-3.5-flash-lite"):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required.")
@@ -24,7 +24,7 @@ class ToolGradSynthesizer:
         self.toolkit = SustainabilityToolKit()
         self.tool_definitions = self.toolkit.get_tool_definitions()
 
-    def _call_gemini(self, prompt: str, temperature: float = 0.7, json_mode: bool = False, max_retries: int = 3) -> str:
+    def _call_gemini(self, prompt: str, temperature: float = 0.7, json_mode: bool = False, max_retries: int = 5) -> str:
         """Helper to invoke Gemini REST API with clean retry and backoff."""
         import time
         payload = {
@@ -47,7 +47,7 @@ class ToolGradSynthesizer:
                     data = response.json()
                     return data["candidates"][0]["content"]["parts"][0]["text"].strip()
                 elif response.status_code == 429:
-                    wait_sec = 8 * attempt
+                    wait_sec = 20 * attempt
                     print(f"    [Pacing] Rate limit 429 received from Gemini API. Backing off for {wait_sec}s...", flush=True)
                     time.sleep(wait_sec)
                     last_err = f"HTTP 429 Rate Limit (attempt {attempt}/{max_retries})"

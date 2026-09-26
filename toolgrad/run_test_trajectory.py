@@ -24,7 +24,7 @@ def main():
     )
 
     print(f"[SCENARIO GOAL]:\n{seed_scenario}\n")
-    print("[1/3] Initializing ToolGrad Synthesizer with Gemini 2.5 Flash Lite...")
+    print("[1/3] Initializing ToolGrad Synthesizer with Gemini 3.5 Flash Lite...")
     synthesizer = ToolGradSynthesizer()
 
     print("[2/3] Constructing forward tool execution chain with Textual Gradients...")

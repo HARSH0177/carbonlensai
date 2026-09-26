@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "carbonlensai": "file:..",
     "firebase-admin": "^12.0.0",
     "firebase-functions": "^5.0.0"
   },

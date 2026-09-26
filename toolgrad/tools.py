@@ -148,6 +148,8 @@ class SustainabilityToolKit:
         # Category 'meal' is per 300g standard serving.
         if category == "meal":
             portion_co2e = round((grams / 300.0) * factor_kg, 3)
+        elif category == "energy":
+            portion_co2e = round(grams * factor_kg, 3)
         else:
             portion_co2e = round((grams / 1000.0) * factor_kg, 3)
 
@@ -194,21 +196,37 @@ class SustainabilityToolKit:
         }
 
     def _tool_find_low_carbon_swap(self, current_item: str, category: str, target_max_co2e: float) -> Dict[str, Any]:
-        candidates = [
-            f for f in self.factors 
-            if f.get("category") == category and f.get("co2eKg", 99) < target_max_co2e
-        ]
-        if not candidates:
-            # fallback to plant-based alternative in grocery
-            candidates = [f for f in self.factors if "vegan" in f.get("tags", []) and f.get("category") == "grocery"]
+        item_lower = current_item.lower()
+        is_protein = any(k in item_lower for k in ["chicken", "mutton", "fish", "meat", "pork", "beef", "egg", "protein"])
 
-        if not candidates:
-            candidates = [f for f in self.factors if f.get("category") == "grocery" and f.get("co2eKg", 99) < target_max_co2e]
+        # Filter out non-food and seasonings (e.g. Salt, spices)
+        valid_pool = [
+            f for f in self.factors 
+            if "seasoning" not in f.get("tags", []) and f.get("category") in ["grocery", "meal"]
+        ]
+
+        if is_protein:
+            # Prioritize realistic plant-based or lower-emission protein alternatives
+            protein_candidates = [
+                f for f in valid_pool
+                if any(p in f["name"].lower() for p in ["dal", "pulses", "beans", "paneer", "tofu", "egg", "chana"])
+                and f.get("co2eKg", 99) < target_max_co2e
+            ]
+            candidates = protein_candidates if protein_candidates else [
+                f for f in valid_pool if f.get("co2eKg", 99) < target_max_co2e
+            ]
+        else:
+            candidates = [
+                f for f in valid_pool 
+                if (f.get("category") == category or category == "all") and f.get("co2eKg", 99) < target_max_co2e
+            ]
+            if not candidates:
+                candidates = [f for f in valid_pool if f.get("co2eKg", 99) < target_max_co2e]
 
         if not candidates:
             return {"status": "not_found", "message": f"No lower-carbon swap found under {target_max_co2e} kg"}
 
-        # Select the lowest emissions candidate
+        # Select the best emissions candidate from valid culinary alternatives
         best = min(candidates, key=lambda x: x["co2eKg"])
         return {
             "status": "success",
