@@ -218,9 +218,20 @@ class SustainabilityToolKit:
         item_lower = current_item.lower()
         is_protein = any(k in item_lower for k in ["chicken", "mutton", "fish", "meat", "pork", "beef", "egg", "protein"])
 
-        # Determine structural category of current item (grocery ingredient vs. composite meal)
-        lookup = self._tool_lookup_emission_factor(current_item, 100)
-        source_category = lookup.get("category", "grocery")
+        # Determine structural category and baseline emission factor using robust 4-tier lookup
+        lookup = self._tool_lookup_emission_factor(
+            current_item, 
+            grams=1000.0, 
+            category_hint=category if category in ["grocery", "meal", "energy", "transport"] else None
+        )
+        if lookup.get("status") == "success":
+            baseline_matched_name = lookup["matched_item"]
+            baseline_co2e_per_kg = lookup["co2e_kg"]
+            source_category = lookup.get("category", "grocery")
+        else:
+            baseline_matched_name = current_item
+            baseline_co2e_per_kg = 99.0
+            source_category = "grocery"
 
         # Category resolution: grocery ingredients must swap for grocery ingredients; meals swap for meals
         if category in ["grocery", "meal", "energy", "transport", "shopping", "beverage", "snack"]:
@@ -236,11 +247,6 @@ class SustainabilityToolKit:
             if "seasoning" not in f.get("tags", []) and f.get("category") == resolved_category
         ]
 
-        current_co2e = lookup.get("co2e_kg", 99.0) if lookup.get("status") == "success" else 99.0
-        # If lookup was for 100g, normalize to per-kg for baseline comparison
-        factor_match = next((f for f in self.factors if f["name"].lower() == current_item.lower() or current_item.lower() in f["name"].lower()), None)
-        baseline_co2e_per_kg = factor_match["co2eKg"] if factor_match else current_co2e * 10.0
-
         threshold_met = True
         if is_protein:
             # Strictly restrict to nutritional protein alternatives (dal, pulses, beans, paneer, tofu, egg, soya)
@@ -255,7 +261,7 @@ class SustainabilityToolKit:
             if protein_under_target:
                 candidates = protein_under_target
             else:
-                # Never fall back to carbohydrates/starches! Return the lowest available protein alternative
+                # Never fall back to starches! Return the lowest available protein alternative
                 protein_cheaper = [f for f in all_protein_pool if f.get("co2eKg", 99) < baseline_co2e_per_kg]
                 candidates = protein_cheaper if protein_cheaper else all_protein_pool
                 threshold_met = False
@@ -270,11 +276,15 @@ class SustainabilityToolKit:
 
         # Select the best emissions candidate from valid culinary alternatives
         best = min(candidates, key=lambda x: x["co2eKg"])
-        reduction_pct = round(((baseline_co2e_per_kg - best["co2eKg"]) / baseline_co2e_per_kg) * 100, 1) if baseline_co2e_per_kg > best["co2eKg"] else 35.0
+        if baseline_co2e_per_kg > 0:
+            reduction_pct = round(((baseline_co2e_per_kg - best["co2eKg"]) / baseline_co2e_per_kg) * 100, 1)
+        else:
+            reduction_pct = 0.0
 
         res = {
             "status": "success",
             "current_item": current_item,
+            "baseline_matched_item": baseline_matched_name,
             "target_category": resolved_category,
             "nutritional_profile": "protein_equivalent" if is_protein else "general_swap",
             "suggested_swap": best["name"],
