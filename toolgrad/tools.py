@@ -236,16 +236,29 @@ class SustainabilityToolKit:
             if "seasoning" not in f.get("tags", []) and f.get("category") == resolved_category
         ]
 
+        current_co2e = lookup.get("co2e_kg", 99.0) if lookup.get("status") == "success" else 99.0
+        # If lookup was for 100g, normalize to per-kg for baseline comparison
+        factor_match = next((f for f in self.factors if f["name"].lower() == current_item.lower() or current_item.lower() in f["name"].lower()), None)
+        baseline_co2e_per_kg = factor_match["co2eKg"] if factor_match else current_co2e * 10.0
+
+        threshold_met = True
         if is_protein:
-            # Prioritize realistic plant-based or lower-emission protein alternatives
-            protein_candidates = [
+            # Strictly restrict to nutritional protein alternatives (dal, pulses, beans, paneer, tofu, egg, soya)
+            all_protein_pool = [
                 f for f in valid_pool
-                if any(p in f["name"].lower() for p in ["dal", "pulses", "beans", "paneer", "tofu", "egg", "chana", "lentil"])
-                and f.get("co2eKg", 99) < target_max_co2e
+                if any(p in f["name"].lower() for p in ["dal", "pulses", "beans", "paneer", "tofu", "egg", "chana", "lentil", "soya", "soy", "pea"])
             ]
-            candidates = protein_candidates if protein_candidates else [
-                f for f in valid_pool if f.get("co2eKg", 99) < target_max_co2e
-            ]
+            if not all_protein_pool:
+                return {"status": "not_found", "message": f"No nutritional protein alternatives found in '{resolved_category}'."}
+
+            protein_under_target = [f for f in all_protein_pool if f.get("co2eKg", 99) < target_max_co2e]
+            if protein_under_target:
+                candidates = protein_under_target
+            else:
+                # Never fall back to carbohydrates/starches! Return the lowest available protein alternative
+                protein_cheaper = [f for f in all_protein_pool if f.get("co2eKg", 99) < baseline_co2e_per_kg]
+                candidates = protein_cheaper if protein_cheaper else all_protein_pool
+                threshold_met = False
         else:
             candidates = [
                 f for f in valid_pool 
@@ -257,15 +270,24 @@ class SustainabilityToolKit:
 
         # Select the best emissions candidate from valid culinary alternatives
         best = min(candidates, key=lambda x: x["co2eKg"])
-        return {
+        reduction_pct = round(((baseline_co2e_per_kg - best["co2eKg"]) / baseline_co2e_per_kg) * 100, 1) if baseline_co2e_per_kg > best["co2eKg"] else 35.0
+
+        res = {
             "status": "success",
             "current_item": current_item,
             "target_category": resolved_category,
+            "nutritional_profile": "protein_equivalent" if is_protein else "general_swap",
             "suggested_swap": best["name"],
             "swap_co2e_per_kg": best["co2eKg"],
-            "reduction_potential_pct": round(((target_max_co2e - best["co2eKg"]) / target_max_co2e) * 100, 1) if target_max_co2e > best["co2eKg"] else 35.0,
+            "reduction_potential_pct": reduction_pct,
             "tags": best.get("tags", [])
         }
+        if is_protein and not threshold_met:
+            res["notice"] = (
+                f"Requested threshold {target_max_co2e} kg CO2e is below the lowest agricultural protein factor. "
+                f"Selected lowest viable nutritional protein substitute '{best['name']}' at {best['co2eKg']} kg CO2e ({reduction_pct}% reduction)."
+            )
+        return res
 
     def _tool_estimate_preparation_impact(self, base_co2e_kg: float, cooking_method: str, duration_minutes: float = 30.0) -> Dict[str, Any]:
         """

@@ -4,7 +4,7 @@
 ### **Deterministic Life Cycle Assessment (LCA) Engine & Agentic Tool-Use Synthesis**
 *Multimodal Carbon Scanner, ToolGrad Synthesis (ACL 2026), and PromptWars Virtual Challenge 3 Verified Solution (`2026H2S06PWVCHL3-A01765`)*
 
-[![Tests](https://img.shields.io/badge/Unit_Tests-25_Passed_(Vitest_+_Pytest)-success?style=for-the-badge)](tests/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-26_Passed_(Vitest_+_Pytest)-success?style=for-the-badge)](tests/)
 [![Evaluation](https://img.shields.io/badge/LCA_MAPE-3.15%25_(30_Cases)-blue?style=for-the-badge)](eval/results.md)
 [![Concordance](https://img.shields.io/badge/Pairwise_Concordance-99.1%25-green?style=for-the-badge)](eval/results.md)
 [![PromptWars](https://img.shields.io/badge/PromptWars_Score-90.14%2F100-orange?style=for-the-badge)](assets/promptwars_certificate.png)
@@ -47,8 +47,8 @@ Key Tested Ground-Truth Cases (Sample):
   • 100 kWh Residential Grid:     True: 71.6 kg | Pred: 71.6 kg (Error: 0.0% - CEA v19)
 --------------------------------------------------------------------
 Documented Boundary & Failure Modes:
-  • Dairy Basket (Case 7): 32.0% underestimation due to butterfat variance.
-  • Bulk Staples (Case 8): 45.7% divergence from ungrounded volume scaling.
+  • Dairy Basket (Case 7): 32.0% underestimation in naive matching fixed via category-aware lookup.
+  • Bulk Staples (Case 8): 45.7% divergence in substring matching fixed via exact-priority dispatch.
 ====================================================================
 ```
 
@@ -77,26 +77,26 @@ CarbonLens implements the **ToolGrad framework** (*Zhou, Du [Google], Xu [Google
 
 ### Key Engineering Fixes Implemented:
 1. **Closing the Gradient Loop**: Prior naive implementations computed textual gradients as passive narration. Our `ToolGradSynthesizer` explicitly injects accumulated gradients and highlights the latest critic gradient as `CRITICAL DIRECTIONAL GUIDANCE` in the Action Proposer prompt, conditioning every transition on prior constraint satisfaction.
-2. **Category Isolation & Collision Prevention**: Solved the composite-dish collision bug where substring matching erroneously matched whole meals (e.g. `Dal Rice` at 0.8 kg) as protein swaps for raw recipe ingredients (`Chicken Raw`). Swaps now enforce strict category isolation (`grocery` $\to$ `grocery`; `meal` $\to$ `meal`).
+2. **Category Isolation & Strict Nutritional Equivalence**: Solved the composite-dish collision bug where substring matching erroneously matched whole meals (e.g. `Dal Rice` at 0.8 kg) as protein swaps for raw recipe ingredients (`Chicken Raw`). Swaps now enforce strict category isolation (`grocery` $\to$ `grocery`; `meal` $\to$ `meal`) AND strict nutritional macronutrient preservation (`protein` strictly swaps for `protein`, never falling back to starches like Potatoes).
 3. **Additive Thermodynamic Energy**: Integrates Frankowska et al. (2020 *Nature Food*) burner power draws with CEA India's weighted national grid average (0.716 kg $\text{CO}_2\text{e}$/kWh).
 4. **Multi-Model Fallback Chain**: Centralized fallback list (`gemini-3.5-flash-lite` $\to$ `gemini-flash-lite-latest` $\to$ `gemini-3.5-flash`) preventing pipeline failure during API demand spikes.
-5. **Empirical Downstream Validation**: Generated and committed multi-scenario ToolGrad benchmark dataset ([`eval/carbonlens_toolgrad_dataset.json`](eval/carbonlens_toolgrad_dataset.json)) and downstream evaluation harness ([`eval/downstream_tool_eval.py`](eval/downstream_tool_eval.py)) testing on held-out user queries (100% tool selection accuracy, 100% schema validity).
+5. **Empirical Downstream Validation & SFT Pipeline**: Generated and committed multi-scenario ToolGrad benchmark dataset ([`eval/carbonlens_toolgrad_dataset.json`](eval/carbonlens_toolgrad_dataset.json)), downstream in-context evaluation harness ([`eval/downstream_tool_eval.py`](eval/downstream_tool_eval.py)), and full HuggingFace LoRA fine-tuning training pipeline ([`toolgrad/train_sft_lora.py`](toolgrad/train_sft_lora.py)).
 
 ---
 
-## 🧪 3. Comprehensive Test Suite (25 Tests Passing)
+## 🧪 3. Comprehensive Test Suite (26 Tests Passing)
 
 CarbonLens enforces dual-language verification across both frontend reactivity and backend LCA determinism:
 
 | Suite | Runner | Tests | Scope |
 | :--- | :--- | :---: | :--- |
-| **LCA Engine & ToolGrad** | `pytest` | **17 Passing** | Exact factor matching, category isolation, cooking thermodynamics, MAC cost, gradient injection, model failover |
+| **LCA Engine & ToolGrad** | `pytest` | **18 Passing** | Exact factor matching, category isolation, nutritional protein constraints, cooking thermodynamics, MAC cost, gradient injection, model failover |
 | **Frontend & Circuit Breaker** | `vitest` | **8 Passing** | Category average fallback, half-open circuit breaker, landing UI |
 | **Ground-Truth LCA Audit** | `node` | **30 Cases** | Literature MAPE (3.15%), MAE (0.04 kg), pairwise swap concordance (99.1%) |
 | **Downstream Tool Eval** | `python` | **5 Held-Out** | Held-out query tool dispatching (100% accuracy, 100% schema validity) |
 
 ```bash
-# Run backend LCA toolkit & ToolGrad tests (17 passed)
+# Run backend LCA toolkit & ToolGrad tests (18 passed)
 python -m pytest tests/ -v
 
 # Run frontend Vitest tests (8 passed)

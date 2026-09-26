@@ -106,8 +106,8 @@ def test_swap_grocery_ingredient_returns_grocery_not_meal(toolkit):
     })
     assert res["status"] == "success"
     assert res["target_category"] == "grocery"
-    # Should be legume/pulse, e.g. Canned Beans (1.3 kg/kg) or Dal / Pulses (1.8 kg/kg)
-    assert res["suggested_swap"] in ["Canned Beans", "Dal / Pulses"]
+    # Should be legume/pulse, e.g. Frozen Peas (1.1 kg), Canned Beans (1.3 kg), or Dal / Pulses (1.8 kg)
+    assert res["suggested_swap"] in ["Frozen Peas", "Canned Beans", "Dal / Pulses"]
     assert res["suggested_swap"] != "Dal Rice"
     assert res["swap_co2e_per_kg"] <= 2.0
 
@@ -130,9 +130,22 @@ def test_swap_never_returns_seasonings(toolkit):
         "category": "meat",
         "target_max_co2e": 1.0
     })
-    if res["status"] == "success":
-        assert "seasoning" not in res.get("tags", [])
-        assert res["suggested_swap"] != "Salt"
+    assert res["status"] == "success"
+    assert "seasoning" not in res.get("tags", [])
+    assert res["suggested_swap"] != "Salt"
+
+def test_swap_protein_never_returns_starches_or_potatoes(toolkit):
+    # Even if target_max_co2e is very low (e.g. 0.5 kg), swapping Chicken Raw must NEVER recommend Potatoes or Rice
+    res = toolkit.execute("find_low_carbon_swap", {
+        "current_item": "Chicken Raw",
+        "category": "grocery",
+        "target_max_co2e": 0.5
+    })
+    assert res["status"] == "success"
+    assert res["nutritional_profile"] == "protein_equivalent"
+    assert res["suggested_swap"] not in ["Potatoes", "Rice", "Wheat Flour", "Onions", "Tomatoes"]
+    assert any(p in res["suggested_swap"].lower() for p in ["pea", "bean", "dal", "pulse", "tofu", "paneer", "egg"])
+
 
 # ── 4. COOKING ENERGY & THERMODYNAMIC TESTS ───────────────────────────────────
 

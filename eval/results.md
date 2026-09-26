@@ -2,7 +2,7 @@
 
 Measured performance of CarbonLens deterministic emission-factor estimation against curated ground-truth Life Cycle Assessment (LCA) benchmarks.
 
-- **Generated**: 2026-09-26T10:48:39.966Z
+- **Generated**: 2026-09-26T11:12:12.762Z
 - **Evaluation Set**: `eval/testset.json` (30 benchmark cases)
 - **Methodology**: Deterministic item/factor lookup from published agricultural and energy LCA reference databases (Poore & Nemecek 2018, Agribalyse 3.1.1, CEA India v19).
 
